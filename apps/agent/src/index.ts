@@ -63,17 +63,24 @@ async function main(): Promise<void> {
   );
 
   // 8. Graceful shutdown
-  process.on('SIGINT', () => {
-    logger.info('Received SIGINT — shutting down gracefully');
-    agent.stop();
-    setTimeout(() => process.exit(0), 500);
-  });
+  const shutdown = (signal: string) => {
+    logger.info({ signal }, 'Received shutdown signal — draining agent loop');
+    
+    // Safety net: force exit after 10s if loop hangs
+    const forceExit = setTimeout(() => {
+      logger.error('Shutdown timed out — forcing exit');
+      process.exit(1);
+    }, 10000);
 
-  process.on('SIGTERM', () => {
-    logger.info('Received SIGTERM — shutting down gracefully');
-    agent.stop();
-    setTimeout(() => process.exit(0), 500);
-  });
+    agent.stop().then(() => {
+      clearTimeout(forceExit);
+      logger.info('Shutdown complete');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 
   // 9. Start
   await agent.run();

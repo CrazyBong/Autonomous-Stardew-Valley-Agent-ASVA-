@@ -24,6 +24,7 @@ export class SMAPIBridge {
   private readonly bridgeUrl: string;
   private readonly reconnectDelays: readonly number[];
   private reconnecting = false;
+  private closed = false;
 
   constructor(
     config: ConfigLoader,
@@ -40,6 +41,7 @@ export class SMAPIBridge {
 
   /** Connects to the SMAPI bridge. Rejects if initial connection fails. */
   public async connect(): Promise<void> {
+    this.closed = false;
     if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) return;
 
     return new Promise((resolve, reject) => {
@@ -69,6 +71,7 @@ export class SMAPIBridge {
   /** Gracefully closes the bridge connection. */
   public close(): void {
     if (this.ws) {
+      this.closed = true;
       this.ws.removeAllListeners();
       this.ws.close();
       this.ws = null;
@@ -167,6 +170,10 @@ export class SMAPIBridge {
 
     for (const delayMs of this.reconnectDelays) {
       await new Promise((r) => setTimeout(r, delayMs));
+      if (this.closed) {
+        this.reconnecting = false;
+        return;
+      }
       this.logger.info({ delayMs }, 'SMAPIBridge: attempting reconnect');
       try {
         await this.connect();
