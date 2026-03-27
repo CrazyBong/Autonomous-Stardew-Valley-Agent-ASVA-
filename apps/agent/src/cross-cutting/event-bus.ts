@@ -14,9 +14,19 @@ export interface AgentEventMap {
   'bridge.connected': Record<string, never>;
   'bridge.disconnected': { reason: string };
   'bridge.reconnected': Record<string, never>;
+  // ── L2 Execution (Phase 2) ────────────────────────────────────────────
   'task.completed': { taskId: string; type: string };
-  'task.failed': { taskId: string; type: string; error: string };
+  'task.failed': { taskId: string; type: string; reason: string; attemptCount: number };
   'task.blocked': { taskId: string; type: string; attemptCount: number };
+  /** Emitted by the agent loop when the dispatcher is idle and wants a new Task. */
+  'task.requested': { state: import('@asva/shared-types').GameStateSnapshot };
+  /** Emitted by the TaskScheduler (Phase 3) to hand a Task to the dispatcher. */
+  'task.next': { task: import('@asva/shared-types').Task };
+  /** Emitted when a task is blocked; asks the ReplanEngine (Phase 3) for help. */
+  'task.replan': { state: import('@asva/shared-types').GameStateSnapshot; blockedTask: import('@asva/shared-types').Task };
+  /** Emitted by the bridge when a new tile-walkability grid is available. */
+  'bridge.tileGridUpdated': { grid: ReadonlyArray<ReadonlyArray<boolean>> };
+  // ── L3/L4 Planning ────────────────────────────────────────────────────
   'goal.completed': { goalId: string; type: string };
   'bundle.item.available': { bundleId: string; itemId: string };
   'agent.safe-pause': { reason: string };
