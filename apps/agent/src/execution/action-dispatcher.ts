@@ -85,7 +85,7 @@ export class ActionDispatcher {
 
   /**
    * Per-action dispatch failure counter.
-   * Reset to 0 on each new action shift; incremented on each dispatch error.
+   * Reset to 0 on each SUCCESSFUL dispatch; incremented on each dispatch error or stall.
    * When it reaches MAX_TASK_ATTEMPTS the task is permanently failed.
    */
   private dispatchFailures = 0;
@@ -184,8 +184,8 @@ export class ActionDispatcher {
 
     // FIX: adjacency check must also verify same map — tiles (0,0) on different
     // maps must NOT be treated as adjacent, as it would skip a required warp.
-    const sameMaP = start.map === targetMap;
-    if (sameMaP && this.isAdjacentOrEqual(start, target)) {
+    const sameMap = start.map === targetMap;
+    if (sameMap && this.isAdjacentOrEqual(start, target)) {
       this.pendingPath = [];
       this.state = 'EXECUTING';
       this.buildActionQueue(state);
@@ -193,7 +193,7 @@ export class ActionDispatcher {
     }
 
     // Cross-map: emit a single high-level move; bridge resolves warp transitions
-    if (!sameMaP) {
+    if (!sameMap) {
       this.logger.info({ from: start.map, to: targetMap }, 'ActionDispatcher: cross-map warp needed');
       this.actionQueue = [{ type: 'ACTION_MOVE', payload: { targetX, targetY, map: targetMap } }];
       this.state = 'EXECUTING';
@@ -423,7 +423,7 @@ export class ActionDispatcher {
       attemptCount: task.attemptCount,
     });
     this.eventBus.emit('task.replan', {
-      state: null as unknown as GameStateSnapshot, // state unavailable here; agent loop re-supplies
+      state: null,
       blockedTask: task,
     });
   }

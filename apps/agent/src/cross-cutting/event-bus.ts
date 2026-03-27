@@ -23,7 +23,11 @@ export interface AgentEventMap {
   /** Emitted by the TaskScheduler (Phase 3) to hand a Task to the dispatcher. */
   'task.next': { task: import('@asva/shared-types').Task };
   /** Emitted when a task is blocked; asks the ReplanEngine (Phase 3) for help. */
-  'task.replan': { state: import('@asva/shared-types').GameStateSnapshot; blockedTask: import('@asva/shared-types').Task };
+  'task.replan': {
+    /** Current game state if available (null when emitted from dispatcher's fail() path). */
+    state: import('@asva/shared-types').GameStateSnapshot | null;
+    blockedTask: import('@asva/shared-types').Task;
+  };
   /** Emitted by the bridge when a new tile-walkability grid is available. */
   'bridge.tileGridUpdated': { grid: ReadonlyArray<ReadonlyArray<boolean>> };
   // ── L3/L4 Planning ────────────────────────────────────────────────────
