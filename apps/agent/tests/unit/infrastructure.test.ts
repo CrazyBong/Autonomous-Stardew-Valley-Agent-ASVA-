@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConfigLoader } from '../src/infrastructure/config-loader.js';
-import { AppError, ErrorCodes } from '../src/cross-cutting/app-error.js';
-import { EventBus } from '../src/cross-cutting/event-bus.js';
-import { MemoryStore } from '../src/infrastructure/memory-store.js';
+import { ConfigLoader } from '../../src/infrastructure/config-loader.js';
+import { AppError, ErrorCodes } from '../../src/cross-cutting/app-error.js';
+import { EventBus } from '../../src/cross-cutting/event-bus.js';
+import { MemoryStore } from '../../src/infrastructure/memory-store.js';
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import os from 'node:os';
@@ -147,7 +147,7 @@ describe('MemoryStore', () => {
     mkdirSync(tmpDir, { recursive: true });
 
     // Need StateRepository to create the tables first
-    const { StateRepository } = await import('../src/infrastructure/state-repository.js');
+    const { StateRepository } = await import('../../src/infrastructure/state-repository.js');
     new StateRepository(mockConfig, mockLogger); // runs migrations
 
     const store = new MemoryStore(mockConfig, mockLogger);
