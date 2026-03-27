@@ -44,6 +44,7 @@ describe('Strategic Layer (Phase 4)', () => {
       scheduler = new TaskScheduler(eventBus, expander, mockLogger);
       ollamaClient = {
         call: vi.fn() as any,
+        get modelName() { return 'test-model:4b'; },
       };
       bridge = {
         getLatestState: vi.fn(),
@@ -78,11 +79,11 @@ describe('Strategic Layer (Phase 4)', () => {
 
       const spySchedulerLoad = vi.spyOn(scheduler, 'loadDayPlan');
 
-      // Trigger planning
-      eventBus.emit('day.started', { gameDay: 1, season: 'spring', year: 1 });
+      // Trigger planning (only directly, to avoid double-triggers via eventBus)
       await dayPlanner.handleDayStarted({ gameDay: 1, season: 'spring', year: 1 });
 
-      // Verify LLM was called with correct context
+      // Verify LLM was called EXACTLY ONCE with correct context
+      expect(ollamaClient.call).toHaveBeenCalledTimes(1);
       expect(ollamaClient.call).toHaveBeenCalledWith(expect.objectContaining({
         decisionType: 'daily',
         gameDay: 1,

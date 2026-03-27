@@ -58,6 +58,10 @@ export class OllamaClient {
     this.defaultMaxRetries = config.get<number>('ollama.maxRetries');
   }
 
+  public get modelName(): string {
+    return this.model;
+  }
+
   /**
    * Executes an LLM call with full retry/validation/logging.
    * Never returns an unvalidated response.

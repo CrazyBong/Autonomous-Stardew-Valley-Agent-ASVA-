@@ -51,6 +51,9 @@ export class DayPlanner {
       return;
     }
 
+    // Reserve this day immediately to block concurrent calls
+    this.lastPlannedDay = dayKey;
+
     this.logger.info(
       { gameDay: payload.gameDay, season: payload.season, year: payload.year },
       'DayPlanner: generating day plan via LLM'
@@ -58,14 +61,10 @@ export class DayPlanner {
 
     this.eventBus.emit('replan.started', { level: 'daily', reason: 'day.started' });
 
-    // In Phase 4 we need to fetch the live state to plan the day
-    let state = this.bridge.getLatestState();
-    if (!state) {
-      this.logger.warn({}, 'DayPlanner: no game state available — cannot generate day plan');
-      return;
-    }
-
     try {
+      // In Phase 4 we need to fetch the live state to plan the day
+      let state = this.bridge.getLatestState();
+      
       const variables = this.buildPromptVariables(payload, state);
 
       const result = await this.ollamaClient.call({
@@ -93,7 +92,7 @@ export class DayPlanner {
         tasks: result.data.tasks,
         totalEnergyCost: result.data.totalEnergyCost,
         llmRationale: result.data.llmRationale,
-        modelVersion: 'qwen3:4b',
+        modelVersion: this.ollamaClient.modelName ?? 'unknown',
         promptVersion: DAY_PLANNER_PROMPT_VERSION,
         createdAt: new Date().toISOString(),
       };
@@ -106,9 +105,10 @@ export class DayPlanner {
       // Load the plan into the tactical scheduler for expansion
       this.scheduler.loadDayPlan(fullPlan, state);
 
-      this.lastPlannedDay = dayKey;
       this.eventBus.emit('replan.completed', { level: 'daily' });
     } catch (error) {
+      // On failure, clear the reservation so a retry is possible
+      this.lastPlannedDay = null;
       this.logger.error({ error }, 'DayPlanner: LLM planning failed — initiating safe pause');
       this.eventBus.emit('agent.safe-pause', { reason: 'LLM_PLANNING_FAILED' });
     }
