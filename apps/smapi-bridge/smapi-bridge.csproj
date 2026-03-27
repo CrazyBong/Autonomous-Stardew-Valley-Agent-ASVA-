@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>AsvaSmapiMod</AssemblyName>
+    <RootNamespace>AsvaSmapiMod</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SMAPI reference — path must point to local Stardew Valley Mods folder -->
+    <Reference Include="SMAPI">
+      <HintPath>$(StardewValley)/smapi-internal/SMAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="StardewValley">
+      <HintPath>$(StardewValley)/Stardew Valley.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- WebSocket server for net6 -->
+    <PackageReference Include="WatsonWebsocket" Version="4.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

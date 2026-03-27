@@ -1,0 +1,30 @@
+.agent
+
+# Node.js
+node_modules/
+dist/
+build/
+.env
+.npm
+.eslintcache
+
+# C# / .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# ASVA Data & Logs
+apps/agent/data/*.db*
+apps/agent/data/*.jsonl
+apps/agent/logs/
+
+# OS
+.DS_Store
+Thumbs.db
