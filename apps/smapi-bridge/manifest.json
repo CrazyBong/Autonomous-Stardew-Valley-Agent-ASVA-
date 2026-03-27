@@ -1,0 +1,10 @@
+{
+  "Name": "ASVA-SMAPI-Bridge",
+  "UniqueID": "CrazyBong.AsvaSmapiMod",
+  "EntryDll": "AsvaSmapiMod.dll",
+  "MinimumApiVersion": "4.0.0",
+  "Version": "1.0.0",
+  "Description": "Bridge mod for Autonomous Stardew Valley Agent. Exposes a local WebSocket server for real-time game state extraction and action injection.",
+  "Author": "ASVA Project",
+  "UpdateKeys": []
+}

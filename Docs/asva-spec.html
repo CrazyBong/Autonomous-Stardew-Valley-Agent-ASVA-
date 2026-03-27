@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASVA — Technical & Product Requirements Document</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+  :root {
+    --ink: #1a1916;
+    --ink-mid: #3d3d3a;
+    --ink-soft: #6b6b66;
+    --ink-faint: #a8a89f;
+    --paper: #faf9f6;
+    --surface: #f2f0eb;
+    --surface2: #e8e5de;
+    --border: rgba(26,25,22,0.12);
+    --border-strong: rgba(26,25,22,0.22);
+    --accent: #2d5a3d;
+    --accent-light: #e8f0eb;
+    --accent-mid: #4a8a62;
+    --warn: #8b5e00;
+    --warn-light: #fef3dc;
+    --danger: #8b2020;
+    --danger-light: #fdeaea;
+    --info: #1a3a6b;
+    --info-light: #e8eef8;
+    --purple: #3d2080;
+    --purple-light: #eeebf8;
+    --tag-bg: #e8e5de;
+    --tag-text: #3d3d3a;
+    --code-bg: #f0ede6;
+    --shadow-sm: 0 1px 3px rgba(26,25,22,0.08);
+    --shadow-md: 0 4px 16px rgba(26,25,22,0.1);
+    --r: 6px;
+    --r-lg: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────── */
+  .page-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  /* ── COVER ──────────────────────────────────── */
+  .cover {
+    padding: 5rem 0 4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -80px;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(45,90,61,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 1.25rem;
+  }
+
+  .cover-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .cover-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .cover-subtitle {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 2.5rem;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .cover-meta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .cover-meta-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-mid);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .status-badge::before {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-mid);
+  }
+
+  /* ── NAVIGATION ─────────────────────────────── */
+  .toc-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 1.5rem 2rem;
+    margin-bottom: 4rem;
+  }
+
+  .toc-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 1rem;
+  }
+
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2px;
+  }
+
+  .toc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--ink-mid);
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+
+  .toc-item:hover {
+    background: var(--surface2);
+    color: var(--ink);
+  }
+
+  .toc-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    min-width: 18px;
+  }
+
+  /* ── SECTION STRUCTURE ──────────────────────── */
+  .section {
+    margin-bottom: 5rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    padding-top: 8px;
+    min-width: 32px;
+  }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h4 {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p {
+    font-size: 15px;
+    color: var(--ink-mid);
+    line-height: 1.75;
+    margin-bottom: 1rem;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  strong {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* ── PRIORITY TAGS ──────────────────────────── */
+  .p0 {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    background: var(--danger-light);
+    color: var(--danger);
+    vertical-align: middle;
+  }
+
+  .p1 {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    background: var(--warn-light);
+    color: var(--warn);
+    vertical-align: middle;
+  }
+
+  .p2 {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    background: var(--info-light);
+    color: var(--info);
+    vertical-align: middle;
+  }
+
+  /* ── CALLOUTS ───────────────────────────────── */
+  .callout {
+    border-left: 3px solid;
+    padding: 1rem 1.25rem;
+    border-radius: 0 var(--r) var(--r) 0;
+    margin: 1.5rem 0;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .callout-info {
+    border-color: var(--info);
+    background: var(--info-light);
+    color: var(--info);
+  }
+
+  .callout-warn {
+    border-color: var(--warn);
+    background: var(--warn-light);
+    color: #5a3d00;
+  }
+
+  .callout-danger {
+    border-color: var(--danger);
+    background: var(--danger-light);
+    color: var(--danger);
+  }
+
+  .callout-success {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: #1a3d28;
+  }
+
+  .callout strong {
+    color: inherit;
+    font-weight: 600;
+  }
+
+  /* ── CODE ───────────────────────────────────── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+  }
+
+  code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+  }
+
+  p code, li code {
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .code-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.35rem;
+  }
+
+  /* ── TABLES ─────────────────────────────────── */
+  .tbl-wrap {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    background: var(--surface);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink-mid);
+    line-height: 1.55;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+
+  /* ── COMPONENT CARDS ────────────────────────── */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin: 1.5rem 0;
+  }
+
+  .component-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 1.25rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .component-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .component-card-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .component-card-layer {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .layer-strategic { background: var(--purple-light); color: var(--purple); }
+  .layer-tactical { background: var(--warn-light); color: var(--warn); }
+  .layer-execution { background: var(--accent-light); color: var(--accent); }
+  .layer-infra { background: var(--info-light); color: var(--info); }
+  .layer-llm { background: #f5eef8; color: #5a2080; }
+
+  .component-card-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  /* ── FILE TREE ──────────────────────────────── */
+  .filetree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.25rem 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.9;
+    color: var(--ink-mid);
+    margin: 1.25rem 0;
+    overflow-x: auto;
+  }
+
+  .ft-dir { color: var(--ink); font-weight: 500; }
+  .ft-file { color: var(--ink-soft); }
+  .ft-comment {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  /* ── API ENDPOINTS ──────────────────────────── */
+  .endpoint {
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .endpoint-header:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--info);
+    background: var(--surface2);
+  }
+
+  .endpoint-header:hover { background: var(--surface2); }
+
+  .method {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 3px;
+    min-width: 44px;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+
+  .method-get { background: var(--accent-light); color: var(--accent); }
+  .method-post { background: var(--info-light); color: var(--info); }
+  .method-put { background: var(--warn-light); color: var(--warn); }
+  .method-delete { background: var(--danger-light); color: var(--danger); }
+
+  .endpoint-path {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .endpoint-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .endpoint-body {
+    padding: 1.25rem;
+    display: none;
+  }
+
+  .endpoint.open .endpoint-body { display: block; }
+
+  .endpoint-toggle {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    transition: transform 0.2s;
+  }
+
+  .endpoint.open .endpoint-toggle { transform: rotate(90deg); }
+
+  /* ── SPEC SCHEMA ────────────────────────────── */
+  .schema-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 1rem 1.25rem;
+    margin-top: 0.75rem;
+  }
+
+  .schema-field {
+    display: grid;
+    grid-template-columns: 180px 100px 1fr;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    align-items: baseline;
+  }
+
+  .schema-field:last-child { border-bottom: none; }
+
+  .sf-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .sf-name.required::after {
+    content: '*';
+    color: var(--danger);
+    margin-left: 2px;
+  }
+
+  .sf-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--purple);
+  }
+
+  .sf-desc {
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* ── LISTS ──────────────────────────────────── */
+  ul, ol {
+    padding-left: 1.4rem;
+    margin: 0.75rem 0;
+  }
+
+  li {
+    font-size: 14.5px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    margin-bottom: 0.3rem;
+  }
+
+  li:last-child { margin-bottom: 0; }
+
+  ul li::marker { color: var(--ink-faint); }
+
+  /* ── DECISION ROWS ──────────────────────────── */
+  .decision {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin: 1rem 0;
+    font-size: 13.5px;
+  }
+
+  .decision-col {
+    padding: 1rem 1.1rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .decision-col:last-child { border-right: none; }
+
+  .decision-col h5 {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.4rem;
+    font-weight: 400;
+  }
+
+  .decision-col p {
+    font-size: 13px;
+    margin: 0;
+    color: var(--ink-mid);
+  }
+
+  /* ── ERROR TABLE ────────────────────────────── */
+  .error-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: 3px;
+  }
+
+  /* ── LAYER DIAGRAM ──────────────────────────── */
+  .arch-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 1.5rem 0;
+  }
+
+  .arch-layer {
+    border-radius: var(--r);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .arch-layer-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    min-width: 100px;
+    font-weight: 500;
+  }
+
+  .arch-layer-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .arch-layer-mod {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+
+  .layer-l4 { background: var(--purple-light); }
+  .layer-l4 .arch-layer-label { color: var(--purple); }
+  .layer-l4 .arch-layer-mod { background: rgba(61,32,128,0.1); color: var(--purple); }
+
+  .layer-l3 { background: var(--warn-light); }
+  .layer-l3 .arch-layer-label { color: var(--warn); }
+  .layer-l3 .arch-layer-mod { background: rgba(139,94,0,0.1); color: var(--warn); }
+
+  .layer-l2 { background: var(--accent-light); }
+  .layer-l2 .arch-layer-label { color: var(--accent); }
+  .layer-l2 .arch-layer-mod { background: rgba(45,90,61,0.12); color: var(--accent); }
+
+  .layer-l1 { background: var(--info-light); }
+  .layer-l1 .arch-layer-label { color: var(--info); }
+  .layer-l1 .arch-layer-mod { background: rgba(26,58,107,0.1); color: var(--info); }
+
+  /* ── RISK TABLE ─────────────────────────────── */
+  .risk-high td:first-child { border-left: 3px solid var(--danger); }
+  .risk-med td:first-child { border-left: 3px solid var(--warn); }
+  .risk-low td:first-child { border-left: 3px solid var(--accent); }
+
+  /* ── FOOTER ─────────────────────────────────── */
+  .doc-footer {
+    margin-top: 6rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+  @media (max-width: 640px) {
+    .page-wrap { padding: 0 1rem 4rem; }
+    .decision { grid-template-columns: 1fr; }
+    .decision-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .schema-field { grid-template-columns: 1fr 80px; }
+    .sf-desc { grid-column: 1 / -1; color: var(--ink-faint); }
+    .toc-grid { grid-template-columns: 1fr; }
+    .component-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══════════════════════════════════════ COVER -->
+  <header class="cover">
+    <div class="cover-eyebrow">Technical Requirements · Product Requirements · API Specification</div>
+    <h1 class="cover-title">Autonomous Stardew Valley<br><em>Agent</em></h1>
+    <p class="cover-subtitle">A local-first, Ollama-backed AI agent that plays, plans, and progresses through Stardew Valley end-to-end.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Project</span>
+        <span class="cover-meta-value">ASVA v1.0</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Status</span>
+        <span class="status-badge">Draft — Implementation Ready</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">LLM Backend</span>
+        <span class="cover-meta-value">Ollama (local)</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Game Integration</span>
+        <span class="cover-meta-value">SMAPI v4.x</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Architecture</span>
+        <span class="cover-meta-value">Multi-layer Agent</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Standards</span>
+        <span class="cover-meta-value">GEMINI Rules Applied</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ TOC -->
+  <nav class="toc-box">
+    <div class="toc-title">Contents</div>
+    <div class="toc-grid">
+      <a href="#s1" class="toc-item"><span class="toc-num">01</span>Executive Summary</a>
+      <a href="#s2" class="toc-item"><span class="toc-num">02</span>Product Requirements</a>
+      <a href="#s3" class="toc-item"><span class="toc-num">03</span>System Architecture</a>
+      <a href="#s4" class="toc-item"><span class="toc-num">04</span>Module Responsibilities</a>
+      <a href="#s5" class="toc-item"><span class="toc-num">05</span>File/Folder Structure</a>
+      <a href="#s6" class="toc-item"><span class="toc-num">06</span>State Management</a>
+      <a href="#s7" class="toc-item"><span class="toc-num">07</span>LLM Integration Strategy</a>
+      <a href="#s8" class="toc-item"><span class="toc-num">08</span>API Specification</a>
+      <a href="#s9" class="toc-item"><span class="toc-num">09</span>Data Flow</a>
+      <a href="#s10" class="toc-item"><span class="toc-num">10</span>Error Handling</a>
+      <a href="#s11" class="toc-item"><span class="toc-num">11</span>Testing Strategy</a>
+      <a href="#s12" class="toc-item"><span class="toc-num">12</span>Scalability</a>
+      <a href="#s13" class="toc-item"><span class="toc-num">13</span>Trade-offs & Decisions</a>
+      <a href="#s14" class="toc-item"><span class="toc-num">14</span>Future Enhancements</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════ S1: EXECUTIVE SUMMARY -->
+  <section class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Executive Summary</h2>
+    </div>
+
+    <p>The Autonomous Stardew Valley Agent (ASVA) is a local-first, open-source AI system that autonomously plays Stardew Valley from game start through late-game milestones. The agent integrates with the game via SMAPI, extracts real-time game state, reasons about long-horizon goals using a local Ollama LLM, and dispatches deterministic, tick-accurate in-game actions.</p>
+
+    <p>ASVA is not a scripted bot. It is a <strong>goal-directed, memory-equipped, multi-layer reasoning agent</strong> that adapts its behavior based on season, resource availability, community center bundle progress, and economic state. Every decision traces back to a strategic plan formed by the LLM and decomposed into executable micro-tasks by deterministic planners.</p>
+
+    <div class="callout callout-info">
+      <strong>Design Philosophy:</strong> The LLM is used exclusively for high-latency strategic and tactical decisions. Execution — action sequencing, pathfinding, tick-level game interaction — is always deterministic code. This separation guarantees reproducibility, fault isolation, and acceptable latency.
+    </div>
+
+    <h3>Primary Goals</h3>
+    <ul>
+      <li>Complete the Community Center (all bundles) as efficiently as possible across in-game seasons</li>
+      <li>Maximize per-season gold through optimal crop selection, foraging, fishing, and mining strategies</li>
+      <li>Reach late-game milestones: all tools upgraded, all skills at level 10, Skull Cavern depth 100+</li>
+      <li>Maintain zero human intervention after session initialization</li>
+      <li>Provide full observability: every decision is logged with its LLM rationale and execution trace</li>
+    </ul>
+
+    <h3>Non-Goals (v1.0)</h3>
+    <ul>
+      <li>Multiplayer support (co-op farm)</li>
+      <li>Cloud inference — all LLM calls remain local via Ollama</li>
+      <li>Real-time streaming play for human entertainment (no performance loop constraints)</li>
+      <li>Support for mods that alter base game mechanics</li>
+    </ul>
+
+    <h3>Key Constraints</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Constraint</th><th>Value</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td>LLM Backend</td><td>Ollama (local)</td><td>Zero cloud dependency, privacy, cost</td></tr>
+          <tr><td>Game Integration</td><td>SMAPI v4.x</td><td>Officially supported modding API, stable hooks</td></tr>
+          <tr><td>Decision Loop Latency</td><td>&lt;500ms strategic, &lt;50ms execution</td><td>Prevents game timeout / input queue overflow</td></tr>
+          <tr><td>Memory Budget</td><td>≤6GB RAM total agent process</td><td>Must coexist with game + Ollama on same machine</td></tr>
+          <tr><td>State Persistence</td><td>SQLite + JSON on local disk</td><td>No network dependency, simple recovery</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S2: PRD -->
+  <section class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Product Requirements</h2>
+    </div>
+
+    <h3>User Stories & Acceptance Criteria</h3>
+
+    <h4>Epic 1 — Game Initialization</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Story</th><th>Acceptance Criteria</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>US-001</td><td>As a user, I want to start ASVA with a single command so the agent begins playing immediately.</td><td>Single CLI command starts SMAPI bridge, Ollama health check passes, agent enters game within 30s.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-002</td><td>As a user, I want the agent to resume from a saved game without re-planning from scratch.</td><td>State snapshot is loaded; strategic plan is restored; agent resumes the in-progress day plan.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-003</td><td>As a user, I want to configure which Ollama model is used without modifying source code.</td><td><code>config.yaml</code> field <code>ollama.model</code> is respected at startup with validation error if model unavailable.</td><td><span class="p1">P1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Epic 2 — Strategic Planning</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Story</th><th>Acceptance Criteria</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>US-010</td><td>As the system, I need to generate a seasonal crop plan that maximizes gold given current weather, seed availability, and bundle needs.</td><td>LLM produces a valid crop plan each season start. Plan references specific crops, quantities, and planting dates. Profitability score computed and logged.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-011</td><td>As the system, I need to track all 42 Community Center bundles and prioritize acquisition of missing items.</td><td>Bundle state is synced from game after every day. Missing items appear in the tactical queue within one planning cycle.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-012</td><td>As the system, I need to produce a daily schedule that respects energy limits, stamina recovery, and time-of-day constraints.</td><td>Generated schedule never exceeds the player's max stamina. Schedule accounts for travel time between farm, mines, beach, and town. Agent does not pass out in game.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-013</td><td>As a researcher, I want to inspect the LLM's reasoning for any planning decision.</td><td>Every LLM call stores: prompt, raw response, parsed plan, latency, and model version. Accessible via the Observability API.</td><td><span class="p1">P1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Epic 3 — Execution & Action</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Story</th><th>Acceptance Criteria</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>US-020</td><td>As the agent, I need to execute farm actions (water, harvest, plant, till) with tool-aware sequencing.</td><td>Correct tool is equipped before each action. Action succeeds or failure is caught and retried/skipped with reason logged.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-021</td><td>As the agent, I need to navigate the game world via A* pathfinding between any two map points.</td><td>Agent navigates from farm to mine, town, or beach without pathing failure. Blocked paths trigger reroute, not hang.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-022</td><td>As the agent, I need to handle NPC dialogs and in-game menus without stalling.</td><td>Dialog boxes are detected and dismissed within 2 game ticks. Shop interfaces execute buy/sell transactions deterministically.</td><td><span class="p0">P0</span></td></tr>
+          <tr><td>US-023</td><td>As the agent, I need to manage inventory, sell items, and maintain optimal tool loadout automatically.</td><td>Inventory is reorganized after each major activity. Shipping bin is used end-of-day. Tool hotswap takes &lt;100ms.</td><td><span class="p1">P1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Epic 4 — Memory & Learning</h4>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Story</th><th>Acceptance Criteria</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>US-030</td><td>As the system, I need to persist experience across game days so the agent improves its estimates over time.</td><td>Action outcomes (crop yield, fishing success rate, combat results) are stored in ExperienceDB. Estimates are used in planning prompts for subsequent days.</td><td><span class="p1">P1</span></td></tr>
+          <tr><td>US-031</td><td>As the system, I need to detect when a plan is failing and trigger re-planning.</td><td>If a task is blocked for &gt;3 consecutive attempts, it is escalated to the tactical planner. If 3 replans fail, the strategic planner is invoked.</td><td><span class="p0">P0</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Success Metrics</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Target (v1.0)</th><th>Measurement Method</th></tr></thead>
+        <tbody>
+          <tr><td>Community Center completion</td><td>100% bundles completed within Year 2</td><td>Bundle state log at game end</td></tr>
+          <tr><td>Agent pass-out rate</td><td>&lt;2% of game days</td><td>Energy exhaustion events logged</td></tr>
+          <tr><td>LLM decision latency (p99)</td><td>&lt;8 seconds per strategic call</td><td>Ollama call timing in observability log</td></tr>
+          <tr><td>Execution success rate</td><td>&gt;95% of queued tasks complete without error</td><td>Task completion log</td></tr>
+          <tr><td>Unhandled crash rate</td><td>Zero per 100-hour session</td><td>Process monitor + crash log</td></tr>
+          <tr><td>Average gold by end of Year 1</td><td>≥500,000g</td><td>Gold state snapshot at day 112</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S3: ARCHITECTURE -->
+  <section class="section" id="s3">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">System Architecture</h2>
+    </div>
+
+    <p>ASVA is structured as a four-layer agent architecture separated by planning horizon. Each layer communicates exclusively downward through typed interfaces. No layer calls upward, and no layer skips a layer below it. This strict dependency direction (matching GEMINI Rule 02) ensures testability and allows individual layers to be replaced independently.</p>
+
+    <div class="arch-layers">
+      <div class="arch-layer layer-l4">
+        <div class="arch-layer-label">L4 Strategic</div>
+        <div class="arch-layer-modules">
+          <span class="arch-layer-mod">StrategicPlanner</span>
+          <span class="arch-layer-mod">GoalManager</span>
+          <span class="arch-layer-mod">SeasonalAdvisor</span>
+          <span class="arch-layer-mod">BundleTracker</span>
+        </div>
+      </div>
+      <div class="arch-layer layer-l3">
+        <div class="arch-layer-label">L3 Tactical</div>
+        <div class="arch-layer-modules">
+          <span class="arch-layer-mod">DayPlanner</span>
+          <span class="arch-layer-mod">TaskScheduler</span>
+          <span class="arch-layer-mod">ResourceOptimizer</span>
+          <span class="arch-layer-mod">ReplanEngine</span>
+        </div>
+      </div>
+      <div class="arch-layer layer-l2">
+        <div class="arch-layer-label">L2 Execution</div>
+        <div class="arch-layer-modules">
+          <span class="arch-layer-mod">ActionDispatcher</span>
+          <span class="arch-layer-mod">Pathfinder</span>
+          <span class="arch-layer-mod">InventoryManager</span>
+          <span class="arch-layer-mod">DialogHandler</span>
+          <span class="arch-layer-mod">CombatController</span>
+        </div>
+      </div>
+      <div class="arch-layer layer-l1">
+        <div class="arch-layer-label">L1 Infrastructure</div>
+        <div class="arch-layer-modules">
+          <span class="arch-layer-mod">SMAPIBridge</span>
+          <span class="arch-layer-mod">OllamaClient</span>
+          <span class="arch-layer-mod">StateRepository</span>
+          <span class="arch-layer-mod">MemoryStore</span>
+          <span class="arch-layer-mod">Logger</span>
+          <span class="arch-layer-mod">ConfigLoader</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Cross-Cutting Components</h3>
+    <p>Three components sit outside the layer stack and are accessible by all layers. They are injected via dependency injection, never imported directly.</p>
+
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">cross-cutting</span>EventBus</div>
+        <div class="component-card-desc">Typed pub/sub for inter-layer events. Layers subscribe to events (e.g., <code>day.ended</code>, <code>task.failed</code>) rather than calling upward. Prevents coupling.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">cross-cutting</span>ObservabilityService</div>
+        <div class="component-card-desc">Structured JSON logging, metrics emission, and decision trace recording. Every layer emits structured log entries via this service — never raw <code>console.log</code>.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">cross-cutting</span>ErrorBoundary</div>
+        <div class="component-card-desc">Catches unhandled errors at layer boundaries. Triggers recovery procedures: task retry → replan → safe state → agent pause. Never swallows errors silently.</div>
+      </div>
+    </div>
+
+    <h3>Process Topology</h3>
+    <p>ASVA runs as two processes that communicate over a local Unix socket:</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Process</th><th>Runtime</th><th>Role</th><th>Restartable?</th></tr></thead>
+        <tbody>
+          <tr><td><code>asva-agent</code></td><td>Node.js 20+</td><td>All four layers, state management, LLM orchestration, REST API server</td><td>Yes — state persisted to disk</td></tr>
+          <tr><td><code>asva-smapi-bridge</code></td><td>C# / .NET 6 (SMAPI mod)</td><td>Game state extraction, action injection, event forwarding to agent via WebSocket</td><td>Tied to game process</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>SMAPI Bridge Constraint:</strong> The bridge runs inside the game process as a SMAPI mod. It communicates exclusively via WebSocket (port 7890 by default). The agent process never accesses game memory directly — all game interaction routes through the bridge. This is the only supported integration boundary.
+    </div>
+
+    <h3>Decision Loop — Main Cycle</h3>
+    <p>The agent runs one continuous decision loop. The loop is intentionally separated into slow (LLM) and fast (deterministic) phases:</p>
+    <pre><code>while (agentRunning) {
+  const state = await smapiBridge.getGameState();       // pull current tick state
+
+  if (state.event === 'DAY_START') {
+    const plan = await tacticalLayer.planDay(state);     // LLM-assisted, ~1–5s
+    executionLayer.loadDayPlan(plan);
+  }
+
+  const nextAction = executionLayer.getNextAction(state); // deterministic, &lt;1ms
+  if (nextAction) {
+    await smapiBridge.dispatch(nextAction);
+  }
+
+  if (executionLayer.isBlocked()) {
+    await replanEngine.replan(state, executionLayer.getBlockedTask()); // LLM if needed
+  }
+
+  await sleep(TICK_INTERVAL_MS);                         // default: 50ms
+}</code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S4: MODULE RESPONSIBILITIES -->
+  <section class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Module Responsibilities</h2>
+    </div>
+
+    <h3>L4 — Strategic Layer</h3>
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-strategic">strategic</span>StrategicPlanner</div>
+        <div class="component-card-desc">Invoked at season start and after major goal completion. Produces a multi-week goal tree using LLM reasoning over full game state context. Outputs <code>StrategicPlan</code> with prioritized objectives and estimated timelines.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-strategic">strategic</span>GoalManager</div>
+        <div class="component-card-desc">Maintains the active goal stack. Supports goal preemption (higher priority goal interrupts current), deferral, and completion detection. All goal state is persisted — survives agent restart.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-strategic">strategic</span>SeasonalAdvisor</div>
+        <div class="component-card-desc">Provides season-aware crop calendars, foraging schedules, and fishing spot recommendations. Data-driven from static game data tables. No LLM needed — pure computation over known game mechanics.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-strategic">strategic</span>BundleTracker</div>
+        <div class="component-card-desc">Syncs Community Center bundle state from game. Tracks needed items, seasonal availability windows, and minimum item quantities. Emits <code>bundle.item.available</code> events to trigger acquisition tasks.</div>
+      </div>
+    </div>
+
+    <h3>L3 — Tactical Layer</h3>
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-tactical">tactical</span>DayPlanner</div>
+        <div class="component-card-desc">Core of day-to-day operation. Takes strategic goals + current game state, calls LLM to produce an ordered <code>DayPlan</code> (list of <code>TaskBlock</code>s). Respects stamina budget, time constraints, weather, and shop hours.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-tactical">tactical</span>TaskScheduler</div>
+        <div class="component-card-desc">Converts <code>DayPlan</code> into a time-ordered queue of <code>Task</code> objects with dependencies. Handles task prioritization, prerequisite chaining, and estimated duration tracking.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-tactical">tactical</span>ResourceOptimizer</div>
+        <div class="component-card-desc">Evaluates crop selection, tool usage, energy allocation, and time budget. Provides LP-style (linear programming analogy) scoring for competing task sets. Outputs optimization report attached to each plan.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-tactical">tactical</span>ReplanEngine</div>
+        <div class="component-card-desc">Activated on task failure. Classifies failure type (blocked path, missing item, insufficient energy, NPC unavailable). Attempts deterministic fix first; escalates to LLM replan if fix fails. Implements back-off to prevent replan loops.</div>
+      </div>
+    </div>
+
+    <h3>L2 — Execution Layer</h3>
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-execution">execution</span>ActionDispatcher</div>
+        <div class="component-card-desc">Translates abstract <code>Task</code> objects into concrete SMAPI <code>GameAction</code> sequences. Manages action retry logic, timeout detection, and success validation. Single responsibility: bridge tasks to bridge actions.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-execution">execution</span>Pathfinder</div>
+        <div class="component-card-desc">A* pathfinding over the game map tile graph. Supports multi-map routing (farm → town → mine). Tile graph is cached and rebuilt on map load. Pathfinding runs synchronously — must complete in &lt;5ms for any route.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-execution">execution</span>InventoryManager</div>
+        <div class="component-card-desc">Tracks player inventory state. Handles item sorting, tool equipping, chest storage/retrieval, and sell decisions. Provides <code>hasItem(id, qty)</code>, <code>equipTool(type)</code>, and <code>optimizeLoadout(activity)</code> APIs.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-execution">execution</span>DialogHandler</div>
+        <div class="component-card-desc">Detects and manages all in-game dialog, menu, and UI states. Dismisses non-essential dialogs. Routes shop interactions to transactional buy/sell logic. Handles quest acceptance/completion.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-execution">execution</span>CombatController</div>
+        <div class="component-card-desc">Manages mine/Skull Cavern combat. Implements dodge timing, weapon selection, bomb usage, and retreat triggers. Pure reactive — no LLM involved. Falls back to safe retreat if health drops below threshold.</div>
+      </div>
+    </div>
+
+    <h3>L1 — Infrastructure Layer</h3>
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">infrastructure</span>SMAPIBridge</div>
+        <div class="component-card-desc">WebSocket client to the SMAPI mod. Handles connection, reconnection, message framing, and event deserialization. Provides typed <code>GameStateSnapshot</code> and <code>dispatch(GameAction)</code> interface. All game I/O routes here.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-llm">llm</span>OllamaClient</div>
+        <div class="component-card-desc">HTTP client for Ollama REST API. Implements prompt construction, response parsing, retry-on-timeout, model health checks, and response caching for identical prompts. Tracks token usage and latency per call.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">infrastructure</span>StateRepository</div>
+        <div class="component-card-desc">SQLite-backed persistence layer. Stores game snapshots, strategic plans, task history, and bundle state. All writes are transactional. Exposes typed repository interfaces — no SQL in upper layers.</div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-title"><span class="component-card-layer layer-infra">infrastructure</span>MemoryStore</div>
+        <div class="component-card-desc">Episodic and semantic memory for the agent. Stores experience records (e.g., "fishing at forest pond in summer gives 40% catfish rate"), used as context in planning prompts. Vector-free — simple relevance retrieval by tag and season.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S5: FILE STRUCTURE -->
+  <section class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2 class="section-title">File/Folder Structure</h2>
+    </div>
+
+    <p>The repository is a monorepo with two packages: the Node.js agent and the C# SMAPI bridge. Shared types are published from a third package to guarantee contract consistency, following GEMINI Rule 02 (shared types in <code>/packages/shared-types</code>).</p>
+
+    <div class="filetree">
+<span class="ft-dir">asva/</span>
+├── <span class="ft-dir">apps/</span>
+│   ├── <span class="ft-dir">agent/</span>                         <span class="ft-comment"># Node.js agent process</span>
+│   │   ├── <span class="ft-dir">src/</span>
+│   │   │   ├── <span class="ft-dir">strategic/</span>              <span class="ft-comment"># L4 strategic layer</span>
+│   │   │   │   ├── strategic-planner.ts
+│   │   │   │   ├── goal-manager.ts
+│   │   │   │   ├── seasonal-advisor.ts
+│   │   │   │   ├── bundle-tracker.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── <span class="ft-dir">tactical/</span>               <span class="ft-comment"># L3 tactical layer</span>
+│   │   │   │   ├── day-planner.ts
+│   │   │   │   ├── task-scheduler.ts
+│   │   │   │   ├── resource-optimizer.ts
+│   │   │   │   ├── replan-engine.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── <span class="ft-dir">execution/</span>              <span class="ft-comment"># L2 execution layer</span>
+│   │   │   │   ├── action-dispatcher.ts
+│   │   │   │   ├── pathfinder.ts
+│   │   │   │   ├── inventory-manager.ts
+│   │   │   │   ├── dialog-handler.ts
+│   │   │   │   ├── combat-controller.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── <span class="ft-dir">infrastructure/</span>         <span class="ft-comment"># L1 infrastructure layer</span>
+│   │   │   │   ├── smapi-bridge.ts
+│   │   │   │   ├── ollama-client.ts
+│   │   │   │   ├── state-repository.ts
+│   │   │   │   ├── memory-store.ts
+│   │   │   │   ├── config-loader.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── <span class="ft-dir">api/</span>                    <span class="ft-comment"># Observability REST API server</span>
+│   │   │   │   ├── routes/
+│   │   │   │   │   ├── state.ts
+│   │   │   │   │   ├── decisions.ts
+│   │   │   │   │   ├── plans.ts
+│   │   │   │   │   └── control.ts
+│   │   │   │   ├── middleware/
+│   │   │   │   │   ├── error-handler.ts
+│   │   │   │   │   └── request-logger.ts
+│   │   │   │   └── server.ts
+│   │   │   ├── <span class="ft-dir">cross-cutting/</span>
+│   │   │   │   ├── event-bus.ts
+│   │   │   │   ├── observability-service.ts
+│   │   │   │   └── error-boundary.ts
+│   │   │   ├── <span class="ft-dir">data/</span>                   <span class="ft-comment"># Static game data (crops, bundles, NPCs)</span>
+│   │   │   │   ├── crops.json
+│   │   │   │   ├── bundles.json
+│   │   │   │   ├── npcs.json
+│   │   │   │   ├── fishing-spots.json
+│   │   │   │   └── mine-floors.json
+│   │   │   ├── <span class="ft-dir">prompts/</span>                <span class="ft-comment"># LLM prompt templates (versioned)</span>
+│   │   │   │   ├── strategic-plan.v1.md
+│   │   │   │   ├── day-plan.v1.md
+│   │   │   │   ├── replan.v1.md
+│   │   │   │   └── README.md
+│   │   │   ├── agent.ts                    <span class="ft-comment"># Main agent loop entry</span>
+│   │   │   └── index.ts                    <span class="ft-comment"># Process bootstrap</span>
+│   │   ├── <span class="ft-dir">tests/</span>
+│   │   │   ├── <span class="ft-dir">unit/</span>
+│   │   │   ├── <span class="ft-dir">integration/</span>
+│   │   │   └── <span class="ft-dir">e2e/</span>
+│   │   ├── config.yaml
+│   │   ├── tsconfig.json
+│   │   └── package.json
+│   │
+│   └── <span class="ft-dir">smapi-bridge/</span>                   <span class="ft-comment"># C# SMAPI mod</span>
+│       ├── <span class="ft-dir">src/</span>
+│       │   ├── BridgeMod.cs                <span class="ft-comment"># SMAPI entry point</span>
+│       │   ├── GameStateExtractor.cs       <span class="ft-comment"># Reads game state each tick</span>
+│       │   ├── ActionInjector.cs           <span class="ft-comment"># Injects actions into game</span>
+│       │   ├── WebSocketServer.cs          <span class="ft-comment"># Local WS server (port 7890)</span>
+│       │   ├── EventForwarder.cs           <span class="ft-comment"># Game events → WS messages</span>
+│       │   └── MessageSerializer.cs        <span class="ft-comment"># JSON serialization of game types</span>
+│       ├── manifest.json
+│       └── smapi-bridge.csproj
+│
+├── <span class="ft-dir">packages/</span>
+│   └── <span class="ft-dir">shared-types/</span>               <span class="ft-comment"># TypeScript types shared across apps</span>
+│       ├── <span class="ft-dir">src/</span>
+│       │   ├── game-state.ts
+│       │   ├── actions.ts
+│       │   ├── plans.ts
+│       │   ├── tasks.ts
+│       │   ├── api.ts
+│       │   └── index.ts
+│       ├── tsconfig.json
+│       └── package.json
+│
+├── <span class="ft-dir">docs/</span>
+│   ├── <span class="ft-dir">adr/</span>                        <span class="ft-comment"># Architecture Decision Records</span>
+│   │   ├── ADR-001-smapi-websocket.md
+│   │   ├── ADR-002-sqlite-persistence.md
+│   │   ├── ADR-003-deterministic-execution.md
+│   │   └── ADR-004-prompt-versioning.md
+│   ├── TRD.md
+│   └── API.md
+│
+├── <span class="ft-dir">scripts/</span>
+│   ├── seed-game-data.ts
+│   ├── benchmark-ollama.ts
+│   └── validate-config.ts
+│
+├── docker-compose.yml              <span class="ft-comment"># Ollama + agent (game runs on host)</span>
+├── pnpm-workspace.yaml
+└── README.md
+    </div>
+
+    <div class="callout callout-info">
+      <strong>Prompt Versioning (ADR-004):</strong> All LLM prompts are stored as Markdown files in <code>/apps/agent/src/prompts/</code> with explicit version suffixes. When a prompt is modified, the version is incremented and the old file is retained. The <code>OllamaClient</code> records the prompt file name and version in every decision log entry, ensuring full reproducibility of past decisions.
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S6: STATE MANAGEMENT -->
+  <section class="section" id="s6">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2 class="section-title">State Management Design</h2>
+    </div>
+
+    <p>State in ASVA exists in three distinct layers with different persistence requirements and update frequencies. Mixing these layers is a P0 violation — each type of state has one canonical owner.</p>
+
+    <h3>State Taxonomy</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>State Type</th><th>Owner</th><th>Persistence</th><th>Update Frequency</th><th>Max Staleness</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Live Game State</strong> — player position, health, stamina, inventory, current map</td><td>SMAPIBridge</td><td>In-memory only</td><td>Every 50ms tick</td><td>1 tick (50ms)</td></tr>
+          <tr><td><strong>Game World State</strong> — crop status, NPC schedules, bundle progress, calendar</td><td>StateRepository (SQLite)</td><td>Disk, synced each day</td><td>Once per game day</td><td>1 game day</td></tr>
+          <tr><td><strong>Agent State</strong> — active goals, current day plan, task queue, replan history</td><td>StateRepository (SQLite)</td><td>Disk, after each mutation</td><td>On plan change</td><td>Zero — written synchronously</td></tr>
+          <tr><td><strong>Memory / Experience</strong> — historical action outcomes, statistical observations</td><td>MemoryStore (SQLite)</td><td>Disk, append-only</td><td>End of each activity</td><td>1 activity cycle</td></tr>
+          <tr><td><strong>Decision Trace</strong> — LLM calls, prompts, responses, latency</td><td>ObservabilityService (JSON log)</td><td>Disk, immutable append</td><td>On each LLM call</td><td>N/A — append only</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Core State Types (TypeScript)</h3>
+    <pre><code>// packages/shared-types/src/game-state.ts
+
+export interface GameStateSnapshot {
+  readonly tick: number;
+  readonly gameDay: number;
+  readonly season: 'spring' | 'summer' | 'fall' | 'winter';
+  readonly year: number;
+  readonly timeOfDay: number;            // 600–2600 (6am–2am)
+  readonly player: PlayerState;
+  readonly farm: FarmState;
+  readonly world: WorldState;
+  readonly bundles: BundleState;
+}
+
+export interface PlayerState {
+  readonly position: { x: number; y: number; map: string };
+  readonly health: number;
+  readonly maxHealth: number;
+  readonly stamina: number;
+  readonly maxStamina: number;
+  readonly gold: number;
+  readonly inventory: ReadonlyArray&lt;InventorySlot&gt;;
+  readonly equippedTool: ToolType | null;
+  readonly skills: Record&lt;SkillName, number&gt;;  // 0–10
+}
+
+export interface StrategicPlan {
+  readonly id: string;                   // UUID v7
+  readonly createdAt: Date;
+  readonly season: Season;
+  readonly year: number;
+  readonly primaryGoals: Goal[];
+  readonly cropCalendar: CropCalendarEntry[];
+  readonly bundleTargets: BundleTarget[];
+  readonly llmRationale: string;         // raw LLM reasoning (never trimmed)
+  readonly modelVersion: string;
+  readonly promptVersion: string;
+}
+
+export interface Task {
+  readonly id: string;
+  readonly type: TaskType;
+  readonly priority: number;             // 0–100, higher = more urgent
+  readonly estimatedDurationTicks: number;
+  readonly energyCost: number;
+  readonly prerequisites: string[];      // Task IDs
+  readonly parameters: Record&lt;string, unknown&gt;;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  attemptCount: number;
+  lastError?: string;
+}</code></pre>
+
+    <h3>State Snapshot — Recovery Protocol</h3>
+    <p>On crash or unexpected shutdown, the agent recovers via a deterministic snapshot protocol:</p>
+    <ol>
+      <li>Agent starts, reads latest <code>AgentState</code> snapshot from SQLite</li>
+      <li>Reconnects to SMAPI Bridge — requests current <code>GameStateSnapshot</code></li>
+      <li>Compares game day in snapshot vs. live state — detects any days elapsed while agent was down</li>
+      <li>If same day: resumes task queue at last completed task</li>
+      <li>If day advanced: triggers tactical replan for current day before resuming</li>
+      <li>If season changed: triggers full strategic replan before tactical</li>
+    </ol>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S7: LLM INTEGRATION -->
+  <section class="section" id="s7">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2 class="section-title">LLM Integration Strategy</h2>
+    </div>
+
+    <p>The LLM is a <em>slow, high-quality advisor</em> — not an action controller. All calls to Ollama are asynchronous, bounded by timeouts, retried on failure, and their results are validated before use. The execution layer never waits for an LLM call; LLM calls happen between action cycles.</p>
+
+    <h3>When the LLM is Called</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Trigger</th><th>Caller</th><th>Frequency</th><th>Expected Latency</th><th>Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>Season start</td><td>StrategicPlanner</td><td>4× per year</td><td>3–8s</td><td>Previous season plan template</td></tr>
+          <tr><td>Day start</td><td>DayPlanner</td><td>Daily</td><td>1–4s</td><td>Default activity priority list</td></tr>
+          <tr><td>Task blocked 3× in succession</td><td>ReplanEngine</td><td>On demand</td><td>1–3s</td><td>Skip task, advance queue</td></tr>
+          <tr><td>Unexpected game event</td><td>EventBus handler</td><td>Rare</td><td>1–3s</td><td>Pause and log for human review</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Prompt Architecture</h3>
+    <p>Each LLM call uses a structured prompt with four sections. This structure is enforced by the prompt template system — free-form prompts are not allowed.</p>
+
+    <pre><code># CONTEXT
+You are the strategic planner for an autonomous Stardew Valley agent.
+Today is Day {{gameDay}}, {{season}} Year {{year}}.
+Current gold: {{gold}}g. Stamina: {{stamina}}/{{maxStamina}}.
+
+# GAME STATE
+{{compressedGameState}}  &lt;-- JSON, max 2000 tokens
+
+# MEMORY
+{{relevantMemories}}     &lt;-- top-5 relevant experience records
+
+# TASK
+Generate a day plan as a JSON array of TaskBlock objects.
+Each TaskBlock must include: activity, location, estimatedDuration, energyCost, priority.
+Respond ONLY with a JSON array. No explanation, no markdown, no preamble.</code></pre>
+
+    <div class="callout callout-danger">
+      <strong>P0 — Response Validation:</strong> Every LLM response is parsed through a Zod schema before use. Invalid responses trigger a structured retry (max 3 attempts with corrective prompt). If all retries fail, the system falls back to the deterministic fallback plan. The agent never executes an action derived from an unvalidated LLM response.
+    </div>
+
+    <h3>Ollama Client Design</h3>
+    <pre><code>// infrastructure/ollama-client.ts
+
+interface OllamaCallOptions {
+  promptTemplate: string;
+  variables: Record&lt;string, unknown&gt;;
+  responseSchema: ZodSchema;
+  timeout?: number;          // default: 15000ms
+  maxRetries?: number;       // default: 3
+  cacheable?: boolean;       // default: false
+}
+
+class OllamaClient {
+  async call&lt;T&gt;(options: OllamaCallOptions): Promise&lt;OllamaResult&lt;T&gt;&gt; {
+    const prompt = this.renderTemplate(options.promptTemplate, options.variables);
+    const cacheKey = this.hashPrompt(prompt);
+
+    if (options.cacheable) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
+    const startMs = Date.now();
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt &lt; (options.maxRetries ?? 3); attempt++) {
+      try {
+        const raw = await this.httpPost('/api/generate', { prompt, model: this.model });
+        const parsed = options.responseSchema.parse(JSON.parse(raw.response));
+        const result = { data: parsed, latencyMs: Date.now() - startMs, attempt };
+        this.observability.logDecision({ prompt, raw: raw.response, parsed, ...result });
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.logger.warn('OllamaClient: attempt failed', { attempt, error });
+      }
+    }
+
+    throw new AppError('OLLAMA_CALL_FAILED', 'All retry attempts exhausted', 500, { cause: lastError });
+  }
+}</code></pre>
+
+    <h3>Model Selection Guidelines</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Model</th><th>VRAM Req.</th><th>Planning Quality</th><th>Latency</th><th>Recommendation</th></tr></thead>
+        <tbody>
+          <tr><td>llama3:8b</td><td>6GB</td><td>Good</td><td>~1–2s</td><td>Development / low-VRAM machines</td></tr>
+          <tr><td>llama3:70b-q4</td><td>40GB</td><td>Excellent</td><td>~4–8s</td><td>Production / high-end GPU</td></tr>
+          <tr><td>mistral:7b</td><td>5GB</td><td>Good (instruction)</td><td>~1–2s</td><td>Alternative for 8b class</td></tr>
+          <tr><td>deepseek-r1:14b</td><td>10GB</td><td>Very good (reasoning)</td><td>~3–5s</td><td>Best mid-tier choice</td></tr>
+          <tr><td>qwen2.5:32b</td><td>20GB</td><td>Excellent</td><td>~5–9s</td><td>Recommended default for 24GB GPU</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S8: API SPECIFICATION -->
+  <section class="section" id="s8">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2 class="section-title">API Specification</h2>
+    </div>
+
+    <p>ASVA exposes two API surfaces: an internal WebSocket protocol between the agent and the SMAPI bridge, and an external REST API for observability, control, and integration tooling. All external API responses follow the GEMINI Rule 02 envelope format.</p>
+
+    <h3>Response Envelope</h3>
+    <pre><code>// Success
+{ "success": true, "data": T, "meta"?: { "page": number, "total": number } }
+
+// Error
+{ "success": false, "error": { "code": string, "message": string, "details"?: unknown } }</code></pre>
+
+    <h3>REST API — Base URL: <code>/api/v1</code></h3>
+
+    <h4>Game State</h4>
+
+    <div class="endpoint" id="ep1">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep1')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/state</span>
+        <span class="endpoint-desc">Current game state snapshot</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Returns the most recent game state snapshot extracted from SMAPI. Refreshed every 50ms tick by the SMAPIBridge.</p>
+        <h4>Response Schema</h4>
+        <div class="schema-block">
+          <div class="schema-field"><span class="sf-name">tick</span><span class="sf-type">number</span><span class="sf-desc">Current game tick counter (monotonically increasing)</span></div>
+          <div class="schema-field"><span class="sf-name">gameDay</span><span class="sf-type">number</span><span class="sf-desc">Current in-game day (1–28 per season)</span></div>
+          <div class="schema-field"><span class="sf-name">season</span><span class="sf-type">string</span><span class="sf-desc">One of: spring | summer | fall | winter</span></div>
+          <div class="schema-field"><span class="sf-name">year</span><span class="sf-type">number</span><span class="sf-desc">In-game year (starts at 1)</span></div>
+          <div class="schema-field"><span class="sf-name">timeOfDay</span><span class="sf-type">number</span><span class="sf-desc">In-game time (600–2600, where 600 = 6:00am)</span></div>
+          <div class="schema-field"><span class="sf-name">player</span><span class="sf-type">PlayerState</span><span class="sf-desc">Full player state including position, stamina, gold, inventory</span></div>
+          <div class="schema-field"><span class="sf-name">farm</span><span class="sf-type">FarmState</span><span class="sf-desc">Crop tiles, animal buildings, sprinkler coverage</span></div>
+          <div class="schema-field"><span class="sf-name">bundles</span><span class="sf-type">BundleState</span><span class="sf-desc">All 42 bundles with completion status per item</span></div>
+        </div>
+        <pre><code>// 200 OK
+{
+  "success": true,
+  "data": {
+    "tick": 14821,
+    "gameDay": 8,
+    "season": "spring",
+    "year": 1,
+    "timeOfDay": 920,
+    "player": {
+      "position": { "x": 64, "y": 15, "map": "Farm" },
+      "health": 100, "maxHealth": 100,
+      "stamina": 270, "maxStamina": 270,
+      "gold": 1840,
+      "equippedTool": "WateringCan",
+      "skills": { "farming": 2, "mining": 0, "foraging": 1, "fishing": 0, "combat": 0 }
+    }
+  }
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep2">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep2')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/state/history</span>
+        <span class="endpoint-desc">Historical game state snapshots (paginated)</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <h4>Query Parameters</h4>
+        <div class="schema-block">
+          <div class="schema-field"><span class="sf-name">from</span><span class="sf-type">ISO 8601</span><span class="sf-desc">Start of time window (wall clock time)</span></div>
+          <div class="schema-field"><span class="sf-name">to</span><span class="sf-type">ISO 8601</span><span class="sf-desc">End of time window</span></div>
+          <div class="schema-field"><span class="sf-name">cursor</span><span class="sf-type">string</span><span class="sf-desc">Pagination cursor from previous response meta</span></div>
+          <div class="schema-field"><span class="sf-name">limit</span><span class="sf-type">number</span><span class="sf-desc">Max records per page (default: 50, max: 200)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h4>Plans & Decisions</h4>
+
+    <div class="endpoint" id="ep3">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep3')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/plans/strategic</span>
+        <span class="endpoint-desc">Active strategic plan</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Returns the current strategic plan including goals, crop calendar, bundle targets, and the full LLM rationale that produced it.</p>
+        <div class="schema-block">
+          <div class="schema-field"><span class="sf-name">id</span><span class="sf-type">string (UUID v7)</span><span class="sf-desc">Unique plan identifier</span></div>
+          <div class="schema-field"><span class="sf-name">season</span><span class="sf-type">string</span><span class="sf-desc">Season this plan was created for</span></div>
+          <div class="schema-field"><span class="sf-name">primaryGoals</span><span class="sf-type">Goal[]</span><span class="sf-desc">Ordered list of strategic objectives</span></div>
+          <div class="schema-field"><span class="sf-name">cropCalendar</span><span class="sf-type">CropCalendarEntry[]</span><span class="sf-desc">Crop type, quantity, plant day, harvest day</span></div>
+          <div class="schema-field"><span class="sf-name">llmRationale</span><span class="sf-type">string</span><span class="sf-desc">Raw LLM reasoning text — never truncated</span></div>
+          <div class="schema-field"><span class="sf-name">modelVersion</span><span class="sf-type">string</span><span class="sf-desc">Ollama model tag used (e.g., llama3:8b)</span></div>
+          <div class="schema-field"><span class="sf-name">promptVersion</span><span class="sf-type">string</span><span class="sf-desc">Prompt template version (e.g., strategic-plan.v1)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep4">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep4')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/plans/daily</span>
+        <span class="endpoint-desc">Today's task plan</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Returns the active day plan with current task status. Includes pending, running, completed, and failed tasks for the current game day.</p>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep5">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep5')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/decisions</span>
+        <span class="endpoint-desc">Decision trace log (paginated)</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Paginated history of all LLM decisions. Each entry includes the full prompt, raw LLM response, parsed result, latency, and model metadata. Essential for debugging and research.</p>
+        <h4>Query Parameters</h4>
+        <div class="schema-block">
+          <div class="schema-field"><span class="sf-name">type</span><span class="sf-type">string?</span><span class="sf-desc">Filter by decision type: strategic | daily | replan</span></div>
+          <div class="schema-field"><span class="sf-name">gameDay</span><span class="sf-type">number?</span><span class="sf-desc">Filter to decisions made on a specific game day</span></div>
+          <div class="schema-field"><span class="sf-name">limit</span><span class="sf-type">number</span><span class="sf-desc">Max records (default: 20, max: 100)</span></div>
+        </div>
+        <pre><code>// 200 OK — one entry example
+{
+  "id": "01HX3K...",
+  "type": "daily",
+  "gameDay": 8, "season": "spring", "year": 1,
+  "prompt": "...",
+  "rawResponse": "...",
+  "parsedPlan": { ... },
+  "latencyMs": 2341,
+  "modelVersion": "llama3:8b",
+  "promptVersion": "day-plan.v1",
+  "createdAt": "2024-03-15T09:14:22Z"
+}</code></pre>
+      </div>
+    </div>
+
+    <h4>Agent Control</h4>
+
+    <div class="endpoint" id="ep6">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep6')">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/v1/control/pause</span>
+        <span class="endpoint-desc">Pause agent execution</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Pauses the agent decision loop after completing the current action. Game is not paused — only agent action dispatch is suspended. Safe to call at any time.</p>
+        <pre><code>// 200 OK
+{ "success": true, "data": { "status": "paused", "pausedAt": "2024-03-15T09:15:00Z" } }</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep7">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep7')">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/v1/control/resume</span>
+        <span class="endpoint-desc">Resume agent execution</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Resumes the paused agent. If a day plan was active, execution continues from the last incomplete task.</p>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep8">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep8')">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/v1/control/replan</span>
+        <span class="endpoint-desc">Force a replanning cycle</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Discards the current day plan and triggers an immediate LLM replanning call. Useful for testing or when the user wants to inject a goal override. Requires the agent to be paused.</p>
+        <h4>Request Body</h4>
+        <div class="schema-block">
+          <div class="schema-field"><span class="sf-name required">level</span><span class="sf-type">string</span><span class="sf-desc">Replan scope: "daily" | "tactical" | "strategic"</span></div>
+          <div class="schema-field"><span class="sf-name">goalOverride</span><span class="sf-type">string?</span><span class="sf-desc">Optional natural language goal to inject into next prompt</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h4>Observability</h4>
+
+    <div class="endpoint" id="ep9">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep9')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/health</span>
+        <span class="endpoint-desc">Shallow health check</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <pre><code>// 200 OK
+{ "status": "ok", "timestamp": "2024-03-15T09:15:00Z" }</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep10">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep10')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/health/ready</span>
+        <span class="endpoint-desc">Deep readiness check</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <pre><code>// 200 OK
+{
+  "status": "ok",
+  "smapiBridge": "connected",
+  "ollama": "ok",
+  "sqlite": "ok",
+  "agentLoop": "running"
+}
+
+// 503 Service Unavailable — if any dependency is down
+{
+  "status": "degraded",
+  "smapiBridge": "disconnected",
+  "ollama": "ok",
+  "sqlite": "ok",
+  "agentLoop": "paused"
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint" id="ep11">
+      <div class="endpoint-header" onclick="toggleEndpoint('ep11')">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/metrics</span>
+        <span class="endpoint-desc">Agent performance metrics</span>
+        <span class="endpoint-toggle">▶</span>
+      </div>
+      <div class="endpoint-body">
+        <pre><code>// 200 OK
+{
+  "success": true,
+  "data": {
+    "totalGameDays": 47,
+    "taskCompletionRate": 0.962,
+    "agentPassOutCount": 1,
+    "llmCallCount": 189,
+    "llmLatencyP50Ms": 1820,
+    "llmLatencyP99Ms": 6740,
+    "replanCount": 12,
+    "totalGoldEarned": 284600,
+    "bundlesCompleted": 18,
+    "bundlesTotal": 42
+  }
+}</code></pre>
+      </div>
+    </div>
+
+    <h3>Internal WebSocket Protocol — SMAPI Bridge</h3>
+    <p>All messages use a typed JSON envelope over the local WebSocket (default: <code>ws://localhost:7890</code>).</p>
+
+    <pre><code>// Outbound from bridge to agent (events)
+{ "type": "GAME_STATE_UPDATE", "payload": GameStateSnapshot }
+{ "type": "DAY_STARTED", "payload": { "day": number, "season": string } }
+{ "type": "DAY_ENDED", "payload": { "day": number } }
+{ "type": "DIALOG_OPENED", "payload": { "npcId": string, "options": string[] } }
+{ "type": "CHEST_OPENED", "payload": { "position": { x, y }, "contents": InventorySlot[] } }
+{ "type": "BUNDLE_UPDATED", "payload": { "roomId": string, "bundleId": string, "itemId": string } }
+
+// Inbound from agent to bridge (actions)
+{ "type": "ACTION_MOVE", "payload": { "targetX": number, "targetY": number, "map": string } }
+{ "type": "ACTION_USE_TOOL", "payload": { "x": number, "y": number } }
+{ "type": "ACTION_EQUIP_TOOL", "payload": { "tool": ToolType } }
+{ "type": "ACTION_PICKUP_ITEM", "payload": { "itemId": string } }
+{ "type": "ACTION_DROP_ITEM", "payload": { "slot": number } }
+{ "type": "ACTION_SELECT_DIALOG", "payload": { "optionIndex": number } }
+{ "type": "ACTION_OPEN_MENU", "payload": { "menuType": MenuType } }
+{ "type": "ACTION_BUY_ITEM", "payload": { "shopId": string, "itemId": string, "quantity": number } }
+{ "type": "ACTION_SELL_ITEM", "payload": { "itemId": string, "quantity": number } }
+{ "type": "ACTION_SLEEP" }    // Ends the game day</code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S9: DATA FLOW -->
+  <section class="section" id="s9">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Data Flow Diagrams</h2>
+    </div>
+
+    <h3>Primary Planning Flow (Day Start)</h3>
+    <pre><code>Game (SMAPI)
+  │
+  ├─ WebSocket: DAY_STARTED event
+  │
+  ▼
+SMAPIBridge.onMessage()
+  │ parses event into GameStateSnapshot
+  ▼
+EventBus.emit('day.started', snapshot)
+  │
+  ├─── BundleTracker.sync(snapshot.bundles)
+  │       └── writes delta to StateRepository
+  │
+  └─── DayPlanner.onDayStarted(snapshot)
+         │
+         ├─ GoalManager.getActiveGoals()
+         │     └── reads from StateRepository
+         │
+         ├─ MemoryStore.getRelevantMemories(season, activity)
+         │     └── retrieves top-5 by relevance
+         │
+         ├─ ResourceOptimizer.computeBudget(snapshot)
+         │     └── stamina, time, gold budgets
+         │
+         ├─ OllamaClient.call({ promptTemplate: 'day-plan.v1', ... })
+         │     ├── builds prompt from context
+         │     ├── calls Ollama HTTP API
+         │     ├── validates response via Zod schema
+         │     └── logs to ObservabilityService
+         │
+         └─ TaskScheduler.buildQueue(llmDayPlan)
+               ├── creates ordered Task[] with deps
+               └── writes to StateRepository (agent state)</code></pre>
+
+    <h3>Execution Flow (Per Tick)</h3>
+    <pre><code>AgentLoop.tick()  [every 50ms]
+  │
+  ├─ SMAPIBridge.getLatestState()  [in-memory, no I/O]
+  │
+  ├─ TaskScheduler.getCurrentTask()
+  │     └── returns next runnable Task from queue
+  │
+  ├─ ActionDispatcher.getNextAction(task, gameState)
+  │     ├── checks prerequisites met
+  │     ├── computes next atomic action for current task
+  │     └── returns GameAction or null (task in progress)
+  │
+  ├─ [if action] SMAPIBridge.dispatch(action)
+  │     └── sends ACTION_* message over WebSocket
+  │
+  └─ [if blocked] ReplanEngine.evaluate(task, gameState)
+        ├── classifies failure reason
+        ├── attempts deterministic fix (e.g., reroute, grab item)
+        └── [if fix fails × 3] OllamaClient.call('replan.v1', ...)</code></pre>
+
+    <h3>End-of-Day Flow</h3>
+    <pre><code>EventBus: 'day.ended'
+  │
+  ├─ InventoryManager.endOfDayCleanup()
+  │     ├── move harvest to shipping bin
+  │     └── reorganize inventory for next day
+  │
+  ├─ MemoryStore.recordDayExperiences(taskLog)
+  │     └── appends outcome records for each completed task
+  │
+  ├─ GoalManager.evaluateGoalProgress()
+  │     └── marks completed goals, surfaces new ones
+  │
+  ├─ StateRepository.snapshotAgentState()
+  │     └── atomic write of full agent state to SQLite
+  │
+  └─ ActionDispatcher.dispatch(ACTION_SLEEP)
+        └── ends the game day</code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S10: ERROR HANDLING -->
+  <section class="section" id="s10">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Error Handling & Recovery</h2>
+    </div>
+
+    <p>Error handling follows GEMINI Rule 02 strictly: typed <code>AppError</code> class, no silent failures, unhandled rejections caught at process level, no stack traces exposed in API responses. The agent has four recovery escalation levels before entering a safe pause state.</p>
+
+    <h3>Escalation Hierarchy</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Level</th><th>Trigger</th><th>Recovery Action</th><th>Latency Budget</th></tr></thead>
+        <tbody>
+          <tr><td>L1 — Retry</td><td>Single action fails</td><td>Retry same action up to 3 times with 100ms backoff</td><td>&lt;500ms</td></tr>
+          <tr><td>L2 — Skip</td><td>Action fails 3× in sequence</td><td>Mark task failed, skip to next task in queue</td><td>Immediate</td></tr>
+          <tr><td>L3 — Deterministic Replan</td><td>Core task cannot be completed (missing item, wrong location)</td><td>ReplanEngine attempts rule-based fix without LLM</td><td>&lt;100ms</td></tr>
+          <tr><td>L4 — LLM Replan</td><td>Deterministic fix fails or task is critical path</td><td>LLM generates new partial day plan</td><td>&lt;10s</td></tr>
+          <tr><td>L5 — Safe Pause</td><td>LLM replan fails or bridge disconnected</td><td>Agent pauses, logs full state, waits for human intervention signal</td><td>Immediate</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Error Code Taxonomy</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Code</th><th>Category</th><th>Description</th><th>Recovery</th></tr></thead>
+        <tbody>
+          <tr><td><span class="error-code">BRIDGE_DISCONNECTED</span></td><td>Infrastructure</td><td>WebSocket to SMAPI bridge closed unexpectedly</td><td>Reconnect with exponential backoff (max 60s)</td></tr>
+          <tr><td><span class="error-code">BRIDGE_TIMEOUT</span></td><td>Infrastructure</td><td>Bridge did not respond to action within 2s</td><td>Retry action × 3, then skip</td></tr>
+          <tr><td><span class="error-code">OLLAMA_UNAVAILABLE</span></td><td>LLM</td><td>Ollama HTTP endpoint unreachable</td><td>Use cached fallback plan; alert via observability</td></tr>
+          <tr><td><span class="error-code">OLLAMA_TIMEOUT</span></td><td>LLM</td><td>LLM response exceeded 15s timeout</td><td>Retry × 3 with same prompt</td></tr>
+          <tr><td><span class="error-code">LLM_INVALID_RESPONSE</span></td><td>LLM</td><td>LLM response fails Zod schema validation</td><td>Retry with corrective prompt × 3, then fallback</td></tr>
+          <tr><td><span class="error-code">PATH_NOT_FOUND</span></td><td>Execution</td><td>A* finds no valid path between two points</td><td>Attempt alternate route via waypoints</td></tr>
+          <tr><td><span class="error-code">STAMINA_EXHAUSTED</span></td><td>Execution</td><td>Player stamina at zero before tasks complete</td><td>Skip remaining tasks, go to sleep immediately</td></tr>
+          <tr><td><span class="error-code">DB_WRITE_FAILED</span></td><td>Infrastructure</td><td>SQLite write transaction failed</td><td>Retry × 3 then crash with full state dump</td></tr>
+          <tr><td><span class="error-code">TASK_DEPENDENCY_FAILED</span></td><td>Planning</td><td>A prerequisite task failed or was skipped</td><td>Evaluate if dependent task can proceed; if not, skip subtree</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Error Handling Pattern</h3>
+    <pre><code>// GEMINI Rule 02 — typed AppError, never silent failures
+catch (error) {
+  logger.error('Task execution failed', {
+    error,
+    context: {
+      taskId: task.id,
+      taskType: task.type,
+      attemptCount: task.attemptCount,
+      gameDay: state.gameDay,
+      season: state.season
+    }
+  });
+  throw new AppError(
+    'TASK_EXECUTION_FAILED',
+    `Task ${task.id} of type ${task.type} failed on attempt ${task.attemptCount}`,
+    500,
+    { cause: error, task: task.id }
+  );
+}</code></pre>
+
+    <h3>SMAPI Bridge Reconnection</h3>
+    <pre><code>class SMAPIBridge {
+  private async reconnect(): Promise&lt;void&gt; {
+    const delays = [1000, 2000, 5000, 10000, 30000, 60000]; // ms backoff steps
+    for (const delay of delays) {
+      await sleep(delay);
+      try {
+        await this.connect();
+        this.logger.info('SMAPIBridge: reconnected successfully');
+        this.eventBus.emit('bridge.reconnected');
+        return;
+      } catch {
+        this.logger.warn('SMAPIBridge: reconnect attempt failed', { delay });
+      }
+    }
+    // All attempts exhausted — enter safe pause
+    this.eventBus.emit('agent.safe-pause', { reason: 'BRIDGE_DISCONNECTED' });
+  }
+}</code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S11: TESTING -->
+  <section class="section" id="s11">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2 class="section-title">Testing Strategy</h2>
+    </div>
+
+    <p>Testing ASVA requires special consideration for its two non-deterministic inputs: the game (via SMAPI) and the LLM (via Ollama). Both must be mockable at their integration boundaries — the <code>SMAPIBridge</code> port and the <code>OllamaClient</code> port. No test should ever require a live game or live Ollama instance.</p>
+
+    <h3>Coverage Requirements</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Layer / Module</th><th>Test Type</th><th>Minimum Coverage</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>SeasonalAdvisor, ResourceOptimizer</td><td>Unit</td><td>100%</td><td>Pure deterministic functions — no exceptions</td></tr>
+          <tr><td>Pathfinder</td><td>Unit</td><td>100%</td><td>Critical path — every map topology tested</td></tr>
+          <tr><td>TaskScheduler, ReplanEngine</td><td>Unit + Integration</td><td>90%</td><td>Cover all failure escalation paths</td></tr>
+          <tr><td>DayPlanner (LLM path)</td><td>Integration</td><td>90%</td><td>Mock OllamaClient, test all fallback scenarios</td></tr>
+          <tr><td>SMAPIBridge</td><td>Integration</td><td>90%</td><td>Mock WebSocket server, test reconnection logic</td></tr>
+          <tr><td>StateRepository</td><td>Integration</td><td>95%</td><td>Real SQLite via test DB, test migration rollbacks</td></tr>
+          <tr><td>Full agent loop (day simulation)</td><td>E2E</td><td>All critical paths</td><td>Mock game via bridge fixture, real Ollama optional</td></tr>
+          <tr><td>REST API endpoints</td><td>Integration</td><td>90%</td><td>All routes including error paths, envelope format</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Test Infrastructure</h3>
+    <pre><code>// Deterministic game state fixture factory
+export function createGameStateFixture(overrides?: Partial&lt;GameStateSnapshot&gt;): GameStateSnapshot {
+  return {
+    tick: 1000,
+    gameDay: 5,
+    season: 'spring',
+    year: 1,
+    timeOfDay: 600,
+    player: {
+      position: { x: 64, y: 15, map: 'Farm' },
+      health: 100, maxHealth: 100,
+      stamina: 270, maxStamina: 270,
+      gold: 500,
+      equippedTool: null,
+      skills: { farming: 0, mining: 0, foraging: 0, fishing: 0, combat: 0 },
+      inventory: []
+    },
+    farm: createFarmFixture(),
+    world: createWorldFixture(),
+    bundles: createBundleFixture(),
+    ...overrides
+  };
+}
+
+// OllamaClient mock — injectable at test setup
+export function createMockOllamaClient(responses: Record&lt;string, unknown&gt;): OllamaClient {
+  return {
+    call: vi.fn().mockImplementation(async (options) =&gt; ({
+      data: responses[options.promptTemplate],
+      latencyMs: 100,
+      attempt: 0
+    }))
+  } as unknown as OllamaClient;
+}
+
+// Integration test pattern
+describe('DayPlanner', () =&gt; {
+  it('produces valid day plan with mocked LLM response', async () =&gt; {
+    const planner = new DayPlanner({
+      ollamaClient: createMockOllamaClient({ 'day-plan.v1': validDayPlanFixture }),
+      goalManager: createMockGoalManager(),
+      memoryStore: createMockMemoryStore()
+    });
+    const plan = await planner.planDay(createGameStateFixture());
+    expect(plan.tasks.length).toBeGreaterThan(0);
+    expect(plan.tasks.every(t =&gt; t.energyCost &gt; 0)).toBe(true);
+    expect(plan.totalEnergyCost).toBeLessThanOrEqual(270); // max stamina
+  });
+});</code></pre>
+
+    <h3>E2E Test Scenarios</h3>
+    <ul>
+      <li><strong>Scenario 1 — Full Spring Day:</strong> Agent starts Spring Day 1, generates plan, executes crop planting, foraging, and sleep. Assert: no passout, all crops planted, state snapshot written.</li>
+      <li><strong>Scenario 2 — Blocked Task Recovery:</strong> Pathfinder returns no route to mine. Assert: ReplanEngine triggers, mine task skipped, agent continues with next task.</li>
+      <li><strong>Scenario 3 — SMAPI Bridge Disconnect:</strong> Bridge closes mid-day. Assert: reconnect attempted, agent enters safe pause after max retries, state preserved.</li>
+      <li><strong>Scenario 4 — LLM Timeout:</strong> Ollama simulated to timeout × 3. Assert: fallback plan used, warning logged, agent does not crash.</li>
+      <li><strong>Scenario 5 — Bundle Completion:</strong> Simulate all Spring Crops bundle items collected. Assert: bundle marked complete in BundleTracker, strategic plan updated to deprioritize those items.</li>
+    </ul>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S12: SCALABILITY -->
+  <section class="section" id="s12">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Scalability Considerations</h2>
+    </div>
+
+    <p>ASVA v1.0 is designed for single-machine, single-game-instance operation. However, the architecture supports two natural scaling dimensions: running multiple parallel agent sessions and replacing the LLM backend with a more powerful model or remote inference server.</p>
+
+    <h3>Horizontal Scaling — Multi-Session</h3>
+    <p>To run N parallel game sessions (for research or speedrun comparison):</p>
+    <ul>
+      <li>Each agent instance gets its own SQLite database and port assignment (<code>config.yaml</code> per instance)</li>
+      <li>The SMAPI bridge port (7890) must be unique per instance — configurable via <code>ASVA_BRIDGE_PORT</code></li>
+      <li>Ollama handles concurrent requests natively — no agent-side changes needed for up to ~4 concurrent sessions on adequate hardware</li>
+      <li>For &gt;4 sessions, introduce an <code>OllamaRequestQueue</code> to serialize calls and prevent GPU memory overflow</li>
+    </ul>
+
+    <h3>LLM Backend Upgrade Path</h3>
+    <p>The <code>OllamaClient</code> is the only LLM integration point. Replacing it requires only implementing the same interface:</p>
+    <pre><code>interface LLMClient {
+  call&lt;T&gt;(options: OllamaCallOptions): Promise&lt;OllamaResult&lt;T&gt;&gt;;
+  healthCheck(): Promise&lt;boolean&gt;;
+}
+// Swap Ollama for Claude API, vLLM, or LM Studio by implementing this interface</code></pre>
+
+    <h3>Performance Bottlenecks (Known)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Bottleneck</th><th>Impact</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>LLM inference latency (strategic planning)</td><td>4–10s delay at season start</td><td>Plan asynchronously at night before, pre-cache for next morning</td></tr>
+          <tr><td>A* pathfinding on large maps</td><td>&lt;5ms currently, degrades with mod maps</td><td>Tile graph is cached; add bidirectional A* if needed</td></tr>
+          <tr><td>SQLite write contention</td><td>Rare — single writer by design</td><td>WAL mode enabled; batch end-of-day writes into one transaction</td></tr>
+          <tr><td>Game state snapshot size</td><td>~50KB per snapshot; grows with farm size</td><td>Compress snapshot before LLM context injection; retain only delta fields</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S13: TRADE-OFFS -->
+  <section class="section" id="s13">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2 class="section-title">Trade-offs & Design Decisions</h2>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>Deterministic execution layer vs. LLM-driven execution</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>Deterministic execution, LLM only for planning</p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>LLM latency (1–8s) makes per-action calls impossible at 50ms tick rate. Determinism enables reliable testing and replay. See ADR-003.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>WebSocket vs. shared memory for SMAPI bridge</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>Local WebSocket (port 7890)</p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>SMAPI runs in a .NET process; Node.js agent cannot access its memory directly. WebSocket provides clean process boundary, is debuggable, and supports reconnection. See ADR-001.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>SQLite vs. PostgreSQL for state persistence</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>SQLite with WAL mode</p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>Single-machine deployment, low concurrency, zero infrastructure. SQLite in WAL mode handles the agent's write patterns without contention. Easy backup (file copy). See ADR-002.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>Tag-based memory retrieval vs. vector embeddings</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>Tag-based retrieval (season, activity, location)</p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>Game domain is small and structured. Tag-based retrieval is fully deterministic, zero external dependencies, and faster than embedding lookup. Can upgrade to vector retrieval in v2 if memory corpus grows beyond ~10K records.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>Monorepo vs. separate repositories for agent and bridge</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>Monorepo with pnpm workspaces</p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>Shared types package requires atomic versioning across both apps. Monorepo allows a single PR to update the protocol on both sides simultaneously, preventing contract drift.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="decision-col">
+        <h5>Decision</h5>
+        <p>Prompt stored in files vs. embedded in code</p>
+      </div>
+      <div class="decision-col">
+        <h5>Choice Made</h5>
+        <p>Versioned Markdown files in <code>/prompts/</code></p>
+      </div>
+      <div class="decision-col">
+        <h5>Rationale</h5>
+        <p>Prompts need independent versioning, diff visibility in PRs, and searchability. File-based prompts enable prompt engineers to iterate without touching TypeScript. Version suffix enables reproducibility of past decisions. See ADR-004.</p>
+      </div>
+    </div>
+
+    <h3>Known Risk Register</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Risk</th><th>Severity</th><th>Probability</th><th>Mitigation</th></tr></thead>
+        <tbody class="risk-high">
+          <tr><td>LLM produces plans that are semantically valid JSON but logically incoherent (hallucinated crops, impossible schedules)</td><td>High</td><td>Medium</td><td>Zod validates structure; ResourceOptimizer validates feasibility; implausible plans trigger replan</td></tr>
+        </tbody>
+        <tbody class="risk-high">
+          <tr><td>SMAPI API breaking change after game update</td><td>High</td><td>Medium</td><td>Pin SMAPI version in <code>manifest.json</code>; integration tests catch bridge contract changes</td></tr>
+        </tbody>
+        <tbody class="risk-med">
+          <tr><td>Ollama model not available on target machine</td><td>Medium</td><td>High</td><td>Startup health check validates model availability; <code>validate-config.ts</code> script pre-flight check</td></tr>
+        </tbody>
+        <tbody class="risk-med">
+          <tr><td>Agent gets stuck in infinite replan loop</td><td>Medium</td><td>Low</td><td>Replan counter per task; max 3 replans before task is permanently skipped and incident logged</td></tr>
+        </tbody>
+        <tbody class="risk-low">
+          <tr><td>SQLite database corruption on unexpected shutdown</td><td>Low</td><td>Low</td><td>WAL mode + nightly backup script + crash recovery checks DB integrity on startup</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ S14: FUTURE -->
+  <section class="section" id="s14">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2 class="section-title">Future Enhancements</h2>
+    </div>
+
+    <h3>v1.1 — Observability Dashboard</h3>
+    <p>A local web UI (React + Vite, served by the agent API server) that visualizes: the agent's current location on the farm map, today's task queue and completion status, real-time gold/stamina metrics, and a decision trace explorer showing each LLM planning call. All data consumed from the existing REST API — no new backend work required.</p>
+
+    <h3>v1.2 — Vector Memory</h3>
+    <p>Replace the tag-based <code>MemoryStore</code> with a local vector store (e.g., <code>vectra</code> or <code>chroma</code> via Docker) for semantic memory retrieval. Enable the agent to surface relevant past experiences with greater precision — for example, "which fishing spots were most profitable during rainy summer days" without requiring an exact tag match.</p>
+
+    <h3>v1.3 — Multi-Goal Parallelism</h3>
+    <p>Extend the <code>TaskScheduler</code> to support interleaved task execution — for example, watering crops while waiting for NPCs to become available, or mining in the morning and then switching to social objectives in the evening. The current scheduler is strictly sequential per task block.</p>
+
+    <h3>v2.0 — Multi-Agent Research Mode</h3>
+    <p>Run 8–16 parallel agent instances with different Ollama models, prompt versions, or strategic configurations. Compare outcomes across runs: Community Center completion date, total gold earned, agent passout rate. Enables systematic evaluation of LLM planning quality across models and prompt iterations. Requires the <code>OllamaRequestQueue</code> and a central results aggregation database.</p>
+
+    <h3>v2.1 — Reinforcement Fine-Tuning Data Collection</h3>
+    <p>Emit structured (state, decision, outcome) tuples from each game session in a format suitable for supervised fine-tuning or RLHF. The goal: train a purpose-built Stardew Valley planning model that outperforms general-purpose LLMs on this specific domain, with dramatically lower inference latency.</p>
+
+    <div class="callout callout-success">
+      <strong>Open Source Roadmap:</strong> All v1.x features will be released under MIT license with full documentation. The repository will include a <code>CONTRIBUTING.md</code>, architecture decision records for all major decisions, and a reproducible dev environment via Docker Compose (for Ollama) and a seed-data script that starts a fresh Spring Year 1 game state without requiring an actual game copy.
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ FOOTER -->
+  <footer class="doc-footer">
+    <span>ASVA v1.0 — TRD/PRD/API Specification</span>
+    <span>GEMINI Rules Applied — P0/P1/P2</span>
+  </footer>
+
+</div>
+
+<script>
+  function toggleEndpoint(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

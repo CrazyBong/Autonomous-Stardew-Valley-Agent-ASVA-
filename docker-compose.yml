@@ -1,0 +1,42 @@
+version: '3.9'
+
+# ASVA Docker Compose — Ollama + Agent
+# Note: Stardew Valley + SMAPI run on the host machine directly.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: asva-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  agent:
+    build:
+      context: .
+      dockerfile: apps/agent/Dockerfile
+    container_name: asva-agent
+    environment:
+      - NODE_ENV=production
+      - OLLAMA_BASE_URL=http://localhost:11434
+    ports:
+      - "3000:3000"  # REST API
+    volumes:
+      - agent_data:/app/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    network_mode: host  # Required for SMAPI bridge (localhost:7890)
+
+volumes:
+  ollama_data:
+  agent_data:

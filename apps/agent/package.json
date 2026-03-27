@@ -1,0 +1,37 @@
+{
+  "name": "@asva/agent",
+  "version": "1.0.0",
+  "description": "ASVA Node.js Agent — multi-layer autonomous game agent",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@asva/shared-types": "file:../../packages/shared-types",
+    "better-sqlite3": "^9.4.3",
+    "drizzle-orm": "^0.30.0",
+    "js-yaml": "^4.1.0",
+    "pino": "^9.0.0",
+    "ws": "^8.17.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.12.0",
+    "@types/ws": "^8.5.10",
+    "@vitest/coverage-v8": "^1.5.0",
+    "drizzle-kit": "^0.20.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
