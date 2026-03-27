@@ -19,31 +19,41 @@ import { ErrorCodes } from '../cross-cutting/app-error.js';
  *
  * State machine per Task:
  *  IDLE → PATHING → EXECUTING → [SUCCEEDED | FAILED]
+ *
+ * NOTE on FAILED:
+ *  `fail()` emits `task.failed` and `task.replan` synchronously before clearing
+ *  state. The FAILED branch in the switch is therefore a defensive guard only
+ *  (idempotent cleanup if state somehow lingers). Agent.ts does NOT check
+ *  `isBlocked()` after executeTick() — all failure signalling goes through EventBus.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type DispatcherState = 'IDLE' | 'PATHING' | 'EXECUTING' | 'SUCCEEDED' | 'FAILED';
 
-/** Maximum consecutive dispatch failures before a task is marked 'failed'. */
+/** Maximum times a single Task may be attempted before permanently failing. */
 const MAX_TASK_ATTEMPTS = 3;
 
-/** Ticks we wait for the game to confirm an action before considering it stalled. */
-const ACTION_TIMEOUT_TICKS = 20; // 20 × 50ms = 1s
+/**
+ * Ticks of inactivity (no successful dispatch) before the action is considered
+ * stalled and a hard retry of the entire task is forced.
+ * At 50 ms/tick this equals 1 second.
+ */
+const STALL_TIMEOUT_TICKS = 20;
 
 /** Tool type required for each task type. */
 const TASK_TOOL_MAP: Partial<Record<string, string>> = {
-  WATER_CROP: 'WateringCan',
+  WATER_CROP:   'WateringCan',
   HARVEST_CROP: 'Scythe',
-  TILL_SOIL: 'Hoe',
-  PLANT_SEED: undefined,  // Bare-hand planting via inventory slot selection
-  MINE_ROCKS: 'Pickaxe',
-  COMBAT: 'Sword',
-  FISH: 'FishingRod',
-  FORAGE: undefined,
+  TILL_SOIL:    'Hoe',
+  PLANT_SEED:   undefined, // Bare-hand / seed bag selection in future impl
+  MINE_ROCKS:   'Pickaxe',
+  COMBAT:       'Sword',
+  FISH:         'FishingRod',
+  FORAGE:       undefined,
 };
 
-/** Maps TaskType to the target coordinates field in task.parameters. */
+/** Maps TaskType to the coordinate parameter keys in task.parameters. */
 const TASK_TARGET_PARAM: Partial<Record<string, { x: string; y: string; map: string }>> = {
   WATER_CROP:   { x: 'tileX', y: 'tileY', map: 'map' },
   TILL_SOIL:    { x: 'tileX', y: 'tileY', map: 'map' },
@@ -60,14 +70,25 @@ export class ActionDispatcher {
   private state: DispatcherState = 'IDLE';
   private currentTask: Task | null = null;
 
-  /** Remaining path steps (tile positions to walk through). */
+  /** Pending path steps (tile positions from start to target, exclusive of start). */
   private pendingPath: Array<{ x: number; y: number; map: string }> = [];
 
-  /** Remaining action queue for the current interaction (equip → use → confirm). */
+  /** Ordered GameAction queue for the current interaction phase. */
   private actionQueue: GameAction[] = [];
 
-  /** Ticks since last action was dispatched (stall detection). */
-  private stallCounter = 0;
+  /**
+   * Counts ticks elapsed since the last SUCCESSFUL bridge.dispatch() call.
+   * Incremented every EXECUTING tick; reset to 0 on success.
+   * When it exceeds STALL_TIMEOUT_TICKS the current action is treated as stalled.
+   */
+  private stallTicks = 0;
+
+  /**
+   * Per-action dispatch failure counter.
+   * Reset to 0 on each new action shift; incremented on each dispatch error.
+   * When it reaches MAX_TASK_ATTEMPTS the task is permanently failed.
+   */
+  private dispatchFailures = 0;
 
   constructor(
     private readonly bridge: SMAPIBridge,
@@ -80,67 +101,65 @@ export class ActionDispatcher {
 
   // ── Public API ───────────────────────────────────────────────────────────────
 
-  /** Returns the current execution state. */
   public getState(): DispatcherState { return this.state; }
-
-  /** Returns true if the dispatcher is idle and ready to accept a new task. */
   public isIdle(): boolean { return this.state === 'IDLE'; }
-
-  /** Returns true if the current task is blocked (FAILED) and needs replanning. */
+  /** @deprecated Agent.ts no longer polls this — events are emitted by fail(). Kept for tests. */
   public isBlocked(): boolean { return this.state === 'FAILED'; }
-
-  /** Returns the current task being executed (if any). */
   public getCurrentTask(): Task | null { return this.currentTask; }
 
   /**
-   * Loads a new task for execution. Replaces any current task.
-   * Call only when `isIdle()` is true, or after explicitly calling `clearTask()`.
+   * Loads a new task for execution.
+   * Asserts dispatcher is IDLE; caller must ensure this.
    */
   public loadTask(task: Task): void {
     this.logger.info({ taskId: task.id, taskType: task.type }, 'ActionDispatcher: loading task');
-    this.currentTask = { ...task, status: 'running', attemptCount: task.attemptCount + 1 };
+    this.currentTask = {
+      ...task,
+      status: 'running',
+      attemptCount: (task.attemptCount ?? 0) + 1,
+    };
     this.pendingPath = [];
     this.actionQueue = [];
-    this.stallCounter = 0;
+    this.stallTicks = 0;
+    this.dispatchFailures = 0;
     this.state = 'PATHING';
   }
 
-  /** Clears the current task and resets to IDLE. */
+  /** Resets the dispatcher to IDLE without emitting any events. */
   public clearTask(): void {
     this.currentTask = null;
     this.pendingPath = [];
     this.actionQueue = [];
+    this.stallTicks = 0;
+    this.dispatchFailures = 0;
     this.state = 'IDLE';
   }
 
   /**
-   * Called every agent tick. Drives the state machine one step forward.
-   *
-   * - In PATHING: Computes or advances the A* path to the task target.
-   * - In EXECUTING: Dispatches the next queued GameAction to the bridge.
-   * - In SUCCEEDED/FAILED: Emits an event and transitions to IDLE.
+   * Advances the state machine by one tick.
+   * SUCCEEDED and FAILED branches handle their own cleanup via EventBus — no
+   * external polling of `isBlocked()` is required.
    */
   public async executeTick(state: GameStateSnapshot, grid: TileGrid): Promise<void> {
     if (!this.currentTask) return;
 
     switch (this.state) {
-      case 'PATHING':    await this.tickPathing(state, grid); break;
-      case 'EXECUTING':  await this.tickExecuting(state);     break;
-      case 'SUCCEEDED':  this.handleSucceeded();               break;
-      case 'FAILED':     this.handleFailed();                  break;
+      case 'PATHING':   await this.tickPathing(state, grid); break;
+      case 'EXECUTING': await this.tickExecuting(state);     break;
+      case 'SUCCEEDED': this.handleSucceeded();              break;
+      case 'FAILED':    this.handleFailed();                 break;
     }
   }
 
-  // ── State Machine ─────────────────────────────────────────────────────────
+  // ── State: PATHING ────────────────────────────────────────────────────────
 
-  /** Builds or advances the path to the task's target tile. */
   private async tickPathing(state: GameStateSnapshot, grid: TileGrid): Promise<void> {
     if (!this.currentTask) return;
 
     const paramMap = TASK_TARGET_PARAM[this.currentTask.type];
     const params = this.currentTask.parameters;
 
-    // Tasks with no tile target (SLEEP, TALK_TO_NPC by name) skip pathing
+    // Tasks with no tile target (SLEEP, GIFT_NPC by name, etc.) skip pathing
     if (!paramMap || params['skipPath']) {
       this.state = 'EXECUTING';
       this.buildActionQueue(state);
@@ -156,39 +175,41 @@ export class ActionDispatcher {
         { taskId: this.currentTask.id, params },
         'ActionDispatcher: task missing target coordinates'
       );
-      this.fail('MISSING_TARGET_PARAMS');
+      this.fail(ErrorCodes.MISSING_TARGET_PARAMS);
       return;
     }
 
     const start = state.player.position;
     const target = { x: targetX, y: targetY, map: targetMap };
 
-    // Already adjacent to or on target — go straight to action execution
-    if (this.isAdjacentOrEqual(start, target)) {
+    // FIX: adjacency check must also verify same map — tiles (0,0) on different
+    // maps must NOT be treated as adjacent, as it would skip a required warp.
+    const sameMaP = start.map === targetMap;
+    if (sameMaP && this.isAdjacentOrEqual(start, target)) {
       this.pendingPath = [];
       this.state = 'EXECUTING';
       this.buildActionQueue(state);
       return;
     }
 
-    // Cross-map routing: emit a warp intent and let the bridge handle it
-    if (start.map !== targetMap) {
+    // Cross-map: emit a single high-level move; bridge resolves warp transitions
+    if (!sameMaP) {
       this.logger.info({ from: start.map, to: targetMap }, 'ActionDispatcher: cross-map warp needed');
       this.actionQueue = [{ type: 'ACTION_MOVE', payload: { targetX, targetY, map: targetMap } }];
       this.state = 'EXECUTING';
       return;
     }
 
-    // A* pathfinding on current map
+    // A* on same map
     const result = this.pathfinder.findPath(start, target, grid);
     if (!result) {
-      this.logger.warn({ start, target }, 'ActionDispatcher: pathfinding failed — task blocked');
-      this.fail('PATH_NOT_FOUND');
+      this.logger.warn({ start, target }, 'ActionDispatcher: pathfinding failed');
+      this.fail(ErrorCodes.PATH_NOT_FOUND);
       return;
     }
 
     if (result.steps.length === 0) {
-      // Already there
+      // A* returned empty — already at target
       this.state = 'EXECUTING';
       this.buildActionQueue(state);
       return;
@@ -197,97 +218,126 @@ export class ActionDispatcher {
     this.pendingPath = [...result.steps];
     this.logger.debug({ steps: result.steps.length, cost: result.cost }, 'ActionDispatcher: path computed');
     this.state = 'EXECUTING';
-    // Action queue is built from the path + interaction actions
     this.buildActionQueueFromPath(state);
   }
 
-  /** Dispatches the next queued action to the bridge. */
+  // ── State: EXECUTING ──────────────────────────────────────────────────────
+
   private async tickExecuting(state: GameStateSnapshot): Promise<void> {
     if (!this.currentTask) return;
 
-    // Stall detection
-    this.stallCounter++;
-    if (this.stallCounter > ACTION_TIMEOUT_TICKS && this.actionQueue.length > 0) {
+    // ── Stall detection ──────────────────────────────────────────────────────
+    // stallTicks is only reset on a SUCCESSFUL dispatch (below).
+    // If it exceeds the threshold the current action is considered unresponsive.
+    this.stallTicks++;
+    if (this.stallTicks > STALL_TIMEOUT_TICKS && this.actionQueue.length > 0) {
       this.logger.warn(
-        { stallTicks: this.stallCounter, taskId: this.currentTask.id },
-        'ActionDispatcher: action stalled — retrying'
+        { stallTicks: this.stallTicks, task: this.currentTask.id },
+        'ActionDispatcher: action stalled — forcing failure'
       );
-      this.stallCounter = 0;
-      // Re-try the same action by not popping — just re-dispatch
+      // Treat a stalled action the same as a dispatch error so the retry/fail
+      // path is shared and bounded by MAX_TASK_ATTEMPTS.
+      this.dispatchFailures++;
+      this.stallTicks = 0;
+      if (this.dispatchFailures >= MAX_TASK_ATTEMPTS) {
+        this.fail(ErrorCodes.TASK_DISPATCH_FAILED);
+        return;
+      }
+      // Drop the stalled action and proceed with the next one
+      this.actionQueue.shift();
     }
 
     if (this.actionQueue.length === 0) {
-      // All actions dispatched — mark as succeeded
       this.logger.info({ taskId: this.currentTask.id }, 'ActionDispatcher: task succeeded');
       this.state = 'SUCCEEDED';
       return;
     }
 
-    const action = this.actionQueue.shift()!;
-    this.stallCounter = 0;
+    // Peek — do NOT shift yet; shift only after success so a failed action stays
+    // at the front and can be retried or counted against the cap.
+    const action = this.actionQueue[0]!;
 
     try {
       await this.bridge.dispatch(action);
+      // Success — consume the action and reset both counters
+      this.actionQueue.shift();
+      this.stallTicks = 0;
+      this.dispatchFailures = 0;
       this.observability.recordBusinessEvent('action.dispatched', {
         taskId: this.currentTask.id,
         actionType: action.type,
       });
     } catch (error) {
       this.logger.warn({ action, error }, 'ActionDispatcher: dispatch failed');
-      const attempts = this.currentTask.attemptCount;
-      if (attempts >= MAX_TASK_ATTEMPTS) {
-        this.fail('DISPATCH_FAILED');
-      } else {
-        // Re-queue action for retry next tick
-        this.actionQueue.unshift(action);
+      this.dispatchFailures++;
+      this.stallTicks = 0; // reset stall — we got a real error, not silence
+      if (this.dispatchFailures >= MAX_TASK_ATTEMPTS) {
+        this.fail(ErrorCodes.TASK_DISPATCH_FAILED);
       }
+      // If under the cap: leave action at front for retry next tick
     }
 
-    // Unused state parameter on purpose — may be used for future success validation
-    void state;
+    void state; // may be used for post-dispatch state validation in future
   }
+
+  // ── State: SUCCEEDED / FAILED ─────────────────────────────────────────────
 
   private handleSucceeded(): void {
     if (!this.currentTask) return;
     const task = this.currentTask;
-    this.eventBus.emit('task.completed', { taskId: task.id, type: task.type });
     this.clearTask();
+    // Emit AFTER clearTask so subscribers see IDLE state if they re-check
+    this.eventBus.emit('task.completed', { taskId: task.id, type: task.type });
   }
 
+  /**
+   * Defensive guard — only reached if executeTick() is called while state=FAILED
+   * without a `fail()` having already cleared it. Emits the failure events and
+   * transitions to IDLE (idempotent w.r.t. a second `fail()` call).
+   */
   private handleFailed(): void {
-    if (!this.currentTask) return;
+    if (!this.currentTask) { this.state = 'IDLE'; return; }
     const task = this.currentTask;
-    this.logger.error({ taskId: task.id, lastError: task.lastError }, 'ActionDispatcher: task failed');
+    this.clearTask();
     this.eventBus.emit('task.failed', {
       taskId: task.id,
       type: task.type,
       reason: task.lastError ?? ErrorCodes.UNKNOWN,
       attemptCount: task.attemptCount,
     });
-    this.clearTask();
   }
 
   // ── Action Queue Builders ─────────────────────────────────────────────────
 
   /**
-   * Builds the action queue for direct interaction (no path steps needed).
-   * Order: [equip tool if needed] → [use tool at target]
+   * Builds the action queue for a task already at or adjacent to its target.
+   * Order: [equip tool if needed] → [use tool / place item / etc.]
+   *
+   * If a required tool is not in the inventory, the task is immediately failed
+   * rather than silently continuing without the tool.
    */
   private buildActionQueue(state: GameStateSnapshot): void {
     if (!this.currentTask) return;
     const actions: GameAction[] = [];
 
-    // Handle special task types first
     if (this.currentTask.type === 'SLEEP') {
-      actions.push({ type: 'ACTION_SLEEP' });
-      this.actionQueue = actions;
+      this.actionQueue = [{ type: 'ACTION_SLEEP' }];
       return;
     }
 
     const toolType = TASK_TOOL_MAP[this.currentTask.type];
     if (toolType && !this.inventoryManager.isEquipped(state, toolType)) {
       const equipAction = this.inventoryManager.buildEquipAction(state, toolType);
-      if (equipAction) actions.push(equipAction);
+      if (!equipAction) {
+        // FIX: silently skipping was wrong — fail hard so replan can fetch the tool.
+        this.logger.error(
+          { taskType: this.currentTask.type, toolType },
+          'ActionDispatcher: required tool not in inventory — failing task'
+        );
+        this.fail(ErrorCodes.TASK_EXECUTION_FAILED);
+        return;
+      }
+      actions.push(equipAction);
     }
 
     const paramMap = TASK_TARGET_PARAM[this.currentTask.type];
@@ -304,22 +354,30 @@ export class ActionDispatcher {
   }
 
   /**
-   * Builds an action queue from a computed path + the interaction action at the end.
-   * Each path step becomes an ACTION_MOVE, then the interaction follows.
+   * Builds an action queue from a computed A* path followed by the interaction.
+   * Each path step → ACTION_MOVE, then equip + use actions follow.
    */
   private buildActionQueueFromPath(state: GameStateSnapshot): void {
     if (!this.currentTask) return;
+
     const moveActions: GameAction[] = this.pendingPath.map((pos) => ({
       type: 'ACTION_MOVE' as const,
       payload: { targetX: pos.x, targetY: pos.y, map: pos.map },
     }));
 
-    // Append interaction actions after the move sequence
     const interactionQueue: GameAction[] = [];
     const toolType = TASK_TOOL_MAP[this.currentTask.type];
     if (toolType && !this.inventoryManager.isEquipped(state, toolType)) {
       const equipAction = this.inventoryManager.buildEquipAction(state, toolType);
-      if (equipAction) interactionQueue.push(equipAction);
+      if (!equipAction) {
+        this.logger.error(
+          { taskType: this.currentTask.type, toolType },
+          'ActionDispatcher: required tool not in inventory — failing task'
+        );
+        this.fail(ErrorCodes.TASK_EXECUTION_FAILED);
+        return;
+      }
+      interactionQueue.push(equipAction);
     }
 
     const paramMap = TASK_TARGET_PARAM[this.currentTask.type];
@@ -337,6 +395,7 @@ export class ActionDispatcher {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  /** Tile adjacency check (same-map only; cross-map is handled by the caller). */
   private isAdjacentOrEqual(
     a: { x: number; y: number },
     b: { x: number; y: number }
@@ -344,9 +403,28 @@ export class ActionDispatcher {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) <= 1;
   }
 
+  /**
+   * Marks the current task as failed and immediately emits `task.failed` and
+   * `task.replan` events, then clears state.
+   *
+   * Emitting eagerly here (rather than in handleFailed()) ensures the events
+   * are never swallowed by the agent's isBlocked() guard in agent.ts.
+   */
   private fail(reason: string): void {
     if (!this.currentTask) return;
-    this.currentTask = { ...this.currentTask, status: 'failed', lastError: reason };
-    this.state = 'FAILED';
+    const task = { ...this.currentTask, status: 'failed' as const, lastError: reason };
+    this.logger.error({ taskId: task.id, reason }, 'ActionDispatcher: task failed');
+
+    this.clearTask(); // → IDLE before emitting so subscribers see correct state
+    this.eventBus.emit('task.failed', {
+      taskId: task.id,
+      type: task.type,
+      reason,
+      attemptCount: task.attemptCount,
+    });
+    this.eventBus.emit('task.replan', {
+      state: null as unknown as GameStateSnapshot, // state unavailable here; agent loop re-supplies
+      blockedTask: task,
+    });
   }
 }

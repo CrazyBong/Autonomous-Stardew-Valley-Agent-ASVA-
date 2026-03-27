@@ -30,7 +30,29 @@
 
 ### Phase 3 Prerequisites
 The following EventBus events are defined and ready for Phase 3 (Tactical Layer):
-- `task.requested` — Agent loop asks TaskScheduler for next Task
+- `task.requested` — Agent loop asks TaskScheduler for next Task (edge-triggered, not per-tick)
 - `task.next` — TaskScheduler response (loads task into dispatcher)
-- `task.replan` — Blocked task escalated to ReplanEngine
+- `task.replan` — Emitted directly by `fail()` in ActionDispatcher (not polled externally)
 - `bridge.tileGridUpdated` — Bridge sends walkable tile grid each tick
+
+---
+
+## 2026-03-27 — Phase 2: Hardening (Greptile Review)
+
+### Issues Fixed
+| # | File | Issue | Fix |
+|---|---|---|---|
+| P1 | `action-dispatcher.ts` | `handleFailed()` dead code — `isBlocked()` in agent cleared task first | `fail()` now emits `task.failed` + `task.replan` eagerly. `isBlocked()` branch removed from agent.ts |
+| 2 | `action-dispatcher.ts` | Stall detection ineffective — `stallCounter` reset before action dispatch | Renamed to `stallTicks`, only resets on **successful** dispatch. Stall triggers `dispatchFailures++` bounded by `MAX_TASK_ATTEMPTS` |
+| 3 | `action-dispatcher.ts` | Dispatch retry can loop indefinitely | Changed to peek-not-shift pattern; `dispatchFailures` counter bounded by `MAX_TASK_ATTEMPTS` |
+| 4 | `action-dispatcher.ts` | Silent equip failure — missing tool skipped without error | Missing required tool now immediately calls `fail(TASK_EXECUTION_FAILED)` |
+| 5 | `action-dispatcher.ts` | Adjacency check ignores map boundary | `isAdjacentOrEqual` now only called when `start.map === targetMap` |
+| 6 | `action-dispatcher.ts` | `attemptCount` undefined guard | Added `?? 0` nullish coalescing in `loadTask` |
+| 7 | `agent.ts` | `task.requested` emitted every idle tick (spam) | Edge-triggered with `wasDispatcherIdle` flag — emits only on IDLE transition |
+| 8 | `agent.ts` | Dead `isBlocked()` polling branch | Removed entirely — events go through EventBus from dispatcher |
+| 9 | `inventory-manager.ts` | Duplicate sword display names (`Wood Mallet`, `Pirate's Sword`) | Deduplicated `Sword` list |
+| 10 | `inventory-manager.ts` | JSDoc `getShippableItems` claimed "broken tools" | Updated to accurately describe Phase 2 scope |
+
+### Verification
+- `tsc --noEmit`: **0 errors**
+- Unit tests: **28 / 28 passing**

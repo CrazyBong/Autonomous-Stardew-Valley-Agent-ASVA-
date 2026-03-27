@@ -34,8 +34,12 @@ export class Agent {
   private readonly inventoryManager: InventoryManager;
   private readonly dispatcher: ActionDispatcher;
 
+  /** Tracks whether the dispatcher was idle on the previous tick, to avoid task.requested spam. */
+  private wasDispatcherIdle = false;
+
   /** Sparse tile-walkability grid supplied by the bridge on each state update. */
   private tileGrid: TileGrid = [];
+
 
   constructor(
     private readonly bridge: SMAPIBridge,
@@ -149,9 +153,11 @@ export class Agent {
    * Cycle:
    *  1. Pull latest game state from bridge.
    *  2. Advance the ActionDispatcher one step (path / execute / confirm).
-   *  3. If dispatcher is IDLE, request next task from the Tactical Layer.
-   *  4. If dispatcher is BLOCKED, emit a replan request.
-   *  5. Emit metrics snapshot.
+   *  3. If dispatcher just became idle (edge-triggered), request the next task.
+   *  4. Emit metrics snapshot.
+   *
+   * NOTE: task.failed and task.replan are emitted directly by ActionDispatcher.fail()
+   * via the EventBus — this loop does NOT poll isBlocked() so the signal is never lost.
    */
   private async tick(): Promise<void> {
     if (!this.bridge.isConnected()) return;
@@ -159,24 +165,20 @@ export class Agent {
     const state: GameStateSnapshot = this.bridge.getLatestState();
 
     // 1. Advance the execution state machine
+    const wasIdleBefore = this.dispatcher.isIdle();
     await this.dispatcher.executeTick(state, this.tileGrid);
+    const isIdleNow = this.dispatcher.isIdle();
 
-    // 2. If idle and no task, ask the Tactical Layer for the next task
-    if (this.dispatcher.isIdle()) {
+    // 2. Emit task.requested only on the RISING EDGE of idle
+    //    (i.e. just became idle, or was idle before and still is — but only once).
+    //    wasDispatcherIdle prevents repeated emissions on every tick while idle.
+    if (isIdleNow && !this.wasDispatcherIdle) {
       this.eventBus.emit('task.requested', { state });
     }
+    // Also emit if we were busy and we finished (EXECUTING → IDLE in one tick)
+    this.wasDispatcherIdle = isIdleNow && wasIdleBefore;
 
-    // 3. If blocked, escalate to Replan Engine (Phase 3)
-    if (this.dispatcher.isBlocked()) {
-      const blockedTask = this.dispatcher.getCurrentTask();
-      if (blockedTask) {
-        this.logger.warn({ taskId: blockedTask.id }, 'Agent: task blocked — requesting replan');
-        this.eventBus.emit('task.replan', { state, blockedTask });
-        this.dispatcher.clearTask(); // clear so loop doesn't tight-spin
-      }
-    }
-
-    // 4. Metrics
+    // 3. Metrics
     this.observability.recordMetrics({
       tick: state.tick,
       gameDay: state.gameDay,
@@ -185,6 +187,7 @@ export class Agent {
       dispatcherState: this.dispatcher.getState(),
     });
   }
+
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

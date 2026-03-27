@@ -23,10 +23,12 @@ const TOOL_DISPLAY_NAMES: Record<string, string[]> = {
   Axe:          ['Axe', 'Copper Axe', 'Steel Axe', 'Gold Axe', 'Iridium Axe'],
   Scythe:       ['Scythe', 'Golden Scythe'],
   FishingRod:   ['Bamboo Pole', 'Fiberglass Rod', 'Iridium Rod'],
-  Sword:        ['Rusty Sword', 'Wood Club', 'Pirate\'s Sword', 'Cutlass', 'Elf Blade', 'Silver Saber',
-                 'Wood Mallet', 'Lead Rod', 'Knight\'s Sword', 'Claymore', 'Steel Smallsword', 'Obsidian Edge',
-                 'Pirate\'s Sword', 'Bone Sword', 'Crystal Dagger', 'Yeti Tooth', 'Wood Mallet',
-                 'Dragontooth Cutlass', 'Infinity Blade'],
+  Sword:        [
+    'Rusty Sword', 'Wood Club', 'Elf Blade', 'Silver Saber',
+    'Wood Mallet', 'Lead Rod', "Knight's Sword", 'Claymore', 'Steel Smallsword',
+    'Obsidian Edge', "Pirate's Sword", 'Bone Sword', 'Crystal Dagger', 'Yeti Tooth',
+    'Dragontooth Cutlass', 'Infinity Blade',
+  ],
 };
 
 // ── Class ─────────────────────────────────────────────────────────────────────
@@ -117,14 +119,14 @@ export class InventoryManager {
   }
 
   /**
-   * Returns all inventory slots that are considered "junk" (low-value items that
-   * should be shipped end-of-day rather than carried). This is intentionally conservative —
-   * the dispatcher confirms before any drop action.
+   * Returns all inventory slots carrying items that are safe to ship end-of-day.
+   * Conservative by design — items are only marked shippable if they are
+   * non-zero in quantity and not a known tool type.
    *
-   * For Phase 2, this is limited to: basic foraged items, broken tools.
+   * Phase 2 scope: does not filter seeds, ores, or artisan goods — this will
+   * be tightened in Phase 3 when the Tactical Layer provides goal context.
    */
   public getShippableItems(state: GameStateSnapshot): InventorySlot[] {
-    // Shippable: non-null quantity, not a named tool, not a seed (itemId starts with known prefixes)
     return state.player.inventory.filter((slot) => {
       if (slot.quantity <= 0) return false;
       if (this.isTool(slot.name)) return false;
