@@ -138,7 +138,7 @@ export class SMAPIBridge {
         } else if (msg.type === 'DAY_STARTED') {
           const p = msg.payload as Record<string, unknown>;
           if (typeof p?.day === 'number' && typeof p?.season === 'string' && typeof p?.year === 'number') {
-            this.eventBus.emit('day.started', { gameDay: p.day, season: p.season as string, year: p.year });
+            this.eventBus.emit('day.started', { gameDay: p.day, season: p.season as 'spring' | 'summer' | 'fall' | 'winter', year: p.year });
           }
         } else if (msg.type === 'DAY_ENDED') {
           const p = msg.payload as Record<string, unknown>;

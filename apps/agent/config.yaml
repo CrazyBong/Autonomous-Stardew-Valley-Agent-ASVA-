@@ -3,7 +3,7 @@
 
 ollama:
   baseUrl: "http://localhost:11434"
-  model: "llama3:8b"
+  model: "qwen3:4b"
   timeoutMs: 15000
   maxRetries: 3
 

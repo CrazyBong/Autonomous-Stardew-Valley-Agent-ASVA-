@@ -9,7 +9,7 @@ import { EventEmitter } from 'node:events';
 // ── Event Map (all agent events declared here) ────────────────────────────────
 
 export interface AgentEventMap {
-  'day.started': { gameDay: number; season: string; year: number };
+  'day.started': { gameDay: number; season: 'spring' | 'summer' | 'fall' | 'winter'; year: number };
   'day.ended': { gameDay: number };
   'bridge.connected': Record<string, never>;
   'bridge.disconnected': { reason: string };

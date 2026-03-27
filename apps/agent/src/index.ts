@@ -58,6 +58,7 @@ async function main(): Promise<void> {
     observability,
     stateRepository,
     memoryStore,
+    ollamaClient,
     logger,
     tickIntervalMs
   );
