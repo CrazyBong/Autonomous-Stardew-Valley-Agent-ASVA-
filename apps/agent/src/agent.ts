@@ -6,6 +6,8 @@ import type { ErrorBoundary } from './cross-cutting/error-boundary.js';
 import type { ObservabilityService } from './cross-cutting/observability-service.js';
 import type { StateRepository } from './infrastructure/state-repository.js';
 
+import type { MemoryStore } from './infrastructure/memory-store.js';
+
 /**
  * Agent — main decision loop.
  * Implements the main cycle from spec Section 3 (Decision Loop — Main Cycle).
@@ -25,11 +27,17 @@ export class Agent {
     private readonly eventBus: EventBus,
     private readonly errorBoundary: ErrorBoundary,
     private readonly observability: ObservabilityService,
-    _stateRepository: StateRepository,
+    private readonly stateRepository: StateRepository,
+    private readonly memoryStore: MemoryStore,
     private readonly logger: Logger,
     tickIntervalMs = 50
   ) {
     this.tickIntervalMs = tickIntervalMs;
+
+    this.logger.debug({
+      hasStateRepo: !!this.stateRepository,
+      hasMemoryStore: !!this.memoryStore
+    }, 'Agent initialized with L1 repositories');
 
     // Register safe-pause handler
     this.eventBus.on('agent.safe-pause', ({ reason }) => {

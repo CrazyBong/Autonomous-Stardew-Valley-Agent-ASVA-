@@ -40,7 +40,7 @@ export class SMAPIBridge {
 
   /** Connects to the SMAPI bridge. Rejects if initial connection fails. */
   public async connect(): Promise<void> {
-    if (this.ws?.readyState === WebSocket.OPEN) return;
+    if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) return;
 
     return new Promise((resolve, reject) => {
       this.logger.info({ url: this.bridgeUrl }, 'SMAPIBridge: connecting');
@@ -135,7 +135,7 @@ export class SMAPIBridge {
         } else if (msg.type === 'DAY_STARTED') {
           const p = msg.payload as Record<string, unknown>;
           if (typeof p?.day === 'number' && typeof p?.season === 'string' && typeof p?.year === 'number') {
-            this.eventBus.emit('day.started', { gameDay: p.day, season: p.season as any, year: p.year });
+            this.eventBus.emit('day.started', { gameDay: p.day, season: p.season as string, year: p.year });
           }
         } else if (msg.type === 'DAY_ENDED') {
           const p = msg.payload as Record<string, unknown>;

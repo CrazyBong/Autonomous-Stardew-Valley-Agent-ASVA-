@@ -29,7 +29,7 @@ async function main(): Promise<void> {
 
   // 4. Infrastructure (L1)
   const stateRepository = new StateRepository(config, logger);
-  new MemoryStore(config, logger); // Initialized for side-effect: creates tables
+  const memoryStore = new MemoryStore(config, logger);
   const ollamaClient = new OllamaClient(config, observability, logger);
   const smapiBridge = new SMAPIBridge(config, eventBus, logger);
 
@@ -57,6 +57,7 @@ async function main(): Promise<void> {
     errorBoundary,
     observability,
     stateRepository,
+    memoryStore,
     logger,
     tickIntervalMs
   );

@@ -12,7 +12,7 @@ let _logger: Logger | null = null;
 
 export function createLogger(config: ConfigLoader): Logger {
   const logger = pino({
-    level: config.get('log.level') as string ?? 'info',
+    level: config.get<string>('log.level') ?? 'info',
     redact: {
       paths: [
         'password', '*.password', '**.password',

@@ -167,7 +167,10 @@ namespace AsvaSmapiMod
 
     public static int? CalculateDaysToHarvest(Crop? crop)
     {
-        if (crop == null || crop.dead.Value || crop.currentPhase.Value >= crop.phaseDays.Count - 1)
+        if (crop == null || crop.dead.Value)
+            return null;
+
+        if (crop.currentPhase.Value >= crop.phaseDays.Count - 1)
             return 0;
 
         int daysLeft = 0;

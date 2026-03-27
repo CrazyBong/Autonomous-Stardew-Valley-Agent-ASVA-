@@ -81,8 +81,8 @@ export class MemoryStore {
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const rows = this.db
-      .prepare(`SELECT * FROM experience_records ${where} ORDER BY recorded_at DESC LIMIT ${limit}`)
-      .all(params) as Record<string, unknown>[];
+      .prepare(`SELECT * FROM experience_records ${where} ORDER BY recorded_at DESC LIMIT @limit`)
+      .all({ ...params, limit }) as Record<string, unknown>[];
 
     return rows.map((r) => ({
       id: r['id'] as string,
