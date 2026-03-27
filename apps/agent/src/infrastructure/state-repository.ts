@@ -18,7 +18,7 @@ import type { ConfigLoader } from './config-loader.js';
  * All writes are transactional. Soft deletes for important records.
  */
 export class StateRepository {
-  private readonly db: Database.Database;
+  public readonly db: Database.Database;
 
   constructor(config: ConfigLoader, private readonly logger: Logger) {
     const dbPath = resolve(process.cwd(), config.get<string>('database.path'));

@@ -1,11 +1,8 @@
 import Database from 'better-sqlite3';
-import { resolve, dirname } from 'node:path';
-import { mkdirSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
 import type { ExperienceRecord } from '@asva/shared-types';
 import { AppError, ErrorCodes } from '../cross-cutting/app-error.js';
-import type { ConfigLoader } from './config-loader.js';
 
 /**
  * MemoryStore — L1 Infrastructure Layer.
@@ -16,19 +13,8 @@ import type { ConfigLoader } from './config-loader.js';
  * Rule 02: Append-only inserts, never mutate historical experiences.
  */
 export class MemoryStore {
-  private readonly db: Database.Database;
-
-  constructor(config: ConfigLoader, _logger: Logger) {
-    const dbPath = resolve(process.cwd(), config.get<string>('database.path'));
-    try {
-      mkdirSync(dirname(dbPath), { recursive: true });
-    } catch (cause) {
-      throw new AppError(ErrorCodes.DB_WRITE_FAILED, `Failed to create database directory: ${dirname(dbPath)}`, 500, { cause });
-    }
-
-    // Reuse the same database file as StateRepository
-    this.db = new Database(dbPath);
-    this.db.pragma('journal_mode = WAL');
+  constructor(private readonly db: Database.Database, _logger: Logger) {
+    // Shared database connection — assumed to be already initialized via WAL
   }
 
   /**

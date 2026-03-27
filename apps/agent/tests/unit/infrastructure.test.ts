@@ -143,14 +143,18 @@ describe('MemoryStore', () => {
     debug: vi.fn(),
   } as unknown as import('pino').Logger;
 
+  beforeEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
   it('records and retrieves experience by season', async () => {
     mkdirSync(tmpDir, { recursive: true });
 
     // Need StateRepository to create the tables first
     const { StateRepository } = await import('../../src/infrastructure/state-repository.js');
-    new StateRepository(mockConfig, mockLogger); // runs migrations
+    const repo = new StateRepository(mockConfig, mockLogger); // runs migrations
 
-    const store = new MemoryStore(mockConfig, mockLogger);
+    const store = new MemoryStore(repo.db, mockLogger);
     store.record({
       taskType: 'FISH',
       location: 'forest_pond',

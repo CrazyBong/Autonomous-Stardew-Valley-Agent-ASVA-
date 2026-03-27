@@ -22,7 +22,7 @@ export class ErrorBoundary {
   public async execute<T>(
     operation: () => Promise<T>,
     context: Record<string, unknown>
-  ): Promise<T> {
+  ): Promise<T | void> {
     try {
       return await operation();
     } catch (error) {
@@ -33,9 +33,11 @@ export class ErrorBoundary {
         this.eventBus.emit('agent.safe-pause', {
           reason: (error as AppError).code ?? 'UNKNOWN_FATAL_ERROR',
         });
+        throw error;
       }
 
-      throw error;
+      // Non-fatal: log and let the loop continue
+      return;
     }
   }
 

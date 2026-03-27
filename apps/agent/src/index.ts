@@ -29,7 +29,7 @@ async function main(): Promise<void> {
 
   // 4. Infrastructure (L1)
   const stateRepository = new StateRepository(config, logger);
-  const memoryStore = new MemoryStore(config, logger);
+  const memoryStore = new MemoryStore(stateRepository.db, logger);
   const ollamaClient = new OllamaClient(config, observability, logger);
   const smapiBridge = new SMAPIBridge(config, eventBus, logger);
 
