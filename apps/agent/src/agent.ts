@@ -10,6 +10,7 @@ import type { TileGrid } from './execution/index.js';
 import { ActionDispatcher } from './execution/index.js';
 import { Pathfinder } from './execution/index.js';
 import { InventoryManager } from './execution/index.js';
+import { TaskExpander, TaskScheduler, ReplanEngine } from './tactical/index.js';
 
 /**
  * Agent — main decision loop.
@@ -33,6 +34,11 @@ export class Agent {
   private readonly pathfinder: Pathfinder;
   private readonly inventoryManager: InventoryManager;
   private readonly dispatcher: ActionDispatcher;
+
+  // ── L3 Tactical Layer ───────────────────────────────────────────────────
+  private readonly taskExpander: TaskExpander;
+  private readonly taskScheduler: TaskScheduler;
+  private readonly replanEngine: ReplanEngine;
 
   /** Tracks whether the dispatcher was idle on the previous tick, to avoid task.requested spam. */
   private wasDispatcherIdle = false;
@@ -65,10 +71,16 @@ export class Agent {
       logger
     );
 
+    // Instantiate tactical layer
+    this.taskExpander = new TaskExpander(logger);
+    this.taskScheduler = new TaskScheduler(eventBus, this.taskExpander, logger);
+    this.replanEngine = new ReplanEngine(eventBus, this.taskScheduler, logger);
+
     this.logger.debug(
       { hasStateRepo: !!this.stateRepository, hasMemoryStore: !!this.memoryStore },
-      'Agent initialized with L1 + L2 layers'
+      'Agent initialized with L1 + L2 + L3 layers'
     );
+    void this.replanEngine; // keeps reference alive, suppresses unused TS warning
 
     // ── EventBus wiring ──────────────────────────────────────────────────
 
@@ -82,8 +94,15 @@ export class Agent {
       this.paused = false;
     });
 
+    // ── L3 Tactical Layer Handlers ──────────────────────────────────────────
+
+    // Note: Event handlers for task.requested (Scheduler) and task.replan (ReplanEngine)
+    // are automatically registered within those instances.
+
     // L3 Tactical Layer hook (Phase 3): accepts the next Task from the scheduler
     this.eventBus.on('task.next', ({ task }: { task: Task }) => {
+      // It's technically safer to let ActionDispatcher listen to this directly,
+      // but putting it here makes the agent the central orchestrator.
       if (!this.dispatcher.isIdle()) return;
       this.dispatcher.loadTask(task);
     });
@@ -165,7 +184,6 @@ export class Agent {
     const state: GameStateSnapshot = this.bridge.getLatestState();
 
     // 1. Advance the execution state machine
-    const wasIdleBefore = this.dispatcher.isIdle();
     await this.dispatcher.executeTick(state, this.tileGrid);
     const isIdleNow = this.dispatcher.isIdle();
 
@@ -175,8 +193,8 @@ export class Agent {
     if (isIdleNow && !this.wasDispatcherIdle) {
       this.eventBus.emit('task.requested', { state });
     }
-    // Also emit if we were busy and we finished (EXECUTING → IDLE in one tick)
-    this.wasDispatcherIdle = isIdleNow && wasIdleBefore;
+    
+    this.wasDispatcherIdle = isIdleNow;
 
     // 3. Metrics
     this.observability.recordMetrics({

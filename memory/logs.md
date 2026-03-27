@@ -56,3 +56,26 @@ The following EventBus events are defined and ready for Phase 3 (Tactical Layer)
 ### Verification
 - `tsc --noEmit`: **0 errors**
 - Unit tests: **28 / 28 passing**
+
+## Phase 3: Tactical Layer Implementation (L3)
+**Completed: 2026-03-27**
+Implementation of the mid-level intelligent Task queuing and dynamic replanning logic.
+
+### 1. `TaskExpander`
+- Translates L4 semantic intents (`TaskBlock` like `WATER_CROPS`) into arrays of explicit L2 `Task` objects by inspecting current `GameStateSnapshot`.
+- Supports filtering crops (unwatered, harvestable) dynamically at evaluation time.
+
+### 2. `TaskScheduler`
+- Consumes `DayPlan` and uses `TaskExpander` to unfold task lists.
+- Priority-based FIFO task queuing logic.
+- Subscribes to `task.requested` from L2 to emit `task.next`. Handles the core sequence execution step.
+
+### 3. `ReplanEngine`
+- Subscribes to `task.replan` (emitted by ActionDispatcher upon failure/stall).
+- Error-recovery system. Currently set to evaluate blocked task state and drop unrecoverable tasks (e.g. `TASK_EXECUTION_FAILED`), with scaffolding for injecting corrective tasks (like grabbing water or food) into the TaskScheduler queue in the future.
+
+### Verification
+- `tsc --noEmit`: **0 errors**
+- Unit tests: **33 / 33 passing** (5 new L3 tests for queuing and evaluation logic)
+
+---
