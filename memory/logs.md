@@ -79,3 +79,20 @@ Implementation of the mid-level intelligent Task queuing and dynamic replanning 
 - Unit tests: **33 / 33 passing** (5 new L3 tests for queuing and evaluation logic)
 
 ---
+
+## Phase 4: Strategic Layer Implementation (L4)
+**Completed: 2026-03-27**
+Implementation of the top-level LLM orchestration for generating daily task plans.
+
+### 1. Model & Wiring
+- Updated `config.yaml` to utilize `qwen3:4b` (2.5GB) as the default model due to its optimal balance for strict JSON adherence and context reasoning.
+- Wired `OllamaClient` across the agent dependencies in the main process bootstraper (`index.ts`).
+
+### 2. `DayPlanner`
+- Orchestrates `day.started` triggers to assemble semantic context from `GameState` mapping.
+- Interrogates Ollama for `DayPlan` JSON construction, utilizing strict Zod validation natively.
+- Passes fully structured abstract tasks down into the L3 `TaskScheduler`.
+
+### Verification
+- `tsc --noEmit`: **0 errors**
+- Unit tests: **36 / 36 passing** (3 new Strategic tests covering duplicate-planning guards and failure boundaries).

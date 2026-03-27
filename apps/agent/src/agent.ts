@@ -11,6 +11,8 @@ import { ActionDispatcher } from './execution/index.js';
 import { Pathfinder } from './execution/index.js';
 import { InventoryManager } from './execution/index.js';
 import { TaskExpander, TaskScheduler, ReplanEngine } from './tactical/index.js';
+import { DayPlanner } from './strategic/index.js';
+import type { OllamaClient } from './infrastructure/ollama-client.js';
 
 /**
  * Agent — main decision loop.
@@ -40,6 +42,9 @@ export class Agent {
   private readonly taskScheduler: TaskScheduler;
   private readonly replanEngine: ReplanEngine;
 
+  // ── L4 Strategic Layer ──────────────────────────────────────────────────
+  private readonly dayPlanner: DayPlanner;
+
   /** Tracks whether the dispatcher was idle on the previous tick, to avoid task.requested spam. */
   private wasDispatcherIdle = false;
 
@@ -54,6 +59,7 @@ export class Agent {
     private readonly observability: ObservabilityService,
     private readonly stateRepository: StateRepository,
     private readonly memoryStore: MemoryStore,
+    ollamaClient: OllamaClient,
     private readonly logger: Logger,
     tickIntervalMs = 50
   ) {
@@ -76,11 +82,15 @@ export class Agent {
     this.taskScheduler = new TaskScheduler(eventBus, this.taskExpander, logger);
     this.replanEngine = new ReplanEngine(eventBus, this.taskScheduler, logger);
 
+    // Instantiate strategic layer
+    this.dayPlanner = new DayPlanner(ollamaClient, this.taskScheduler, eventBus, bridge, logger);
+
     this.logger.debug(
       { hasStateRepo: !!this.stateRepository, hasMemoryStore: !!this.memoryStore },
-      'Agent initialized with L1 + L2 + L3 layers'
+      'Agent initialized with L1 + L2 + L3 + L4 layers'
     );
     void this.replanEngine; // keeps reference alive, suppresses unused TS warning
+    void this.dayPlanner;
 
     // ── EventBus wiring ──────────────────────────────────────────────────
 
